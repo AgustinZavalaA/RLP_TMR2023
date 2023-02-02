@@ -14,8 +14,8 @@ Team Prosito code repository for Beach Cleaning Robot for the Mexican Robotics T
 ## Team Members
 - [Agustín Zavala](https://github.com/AgustinZavalaA) 
 - [Jesús Quiñones](https://github.com/Yisuslalala)
-- Grecia Reta
-- Alfredo Zuñiga
+- [Grecia Reta]()# TODO agregar link de github
+- [Alfredo Zuñiga]()# TODO agregar link de github
 
 ## Brainstorm
 Aqui hay que escribir que fallo en el concurso anterior
