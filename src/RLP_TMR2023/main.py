@@ -1,5 +1,10 @@
 import logging as log
 
+
+def sum(a: int, b: int) -> int:
+    return a + b
+
+
 def main():
     log.basicConfig(level=log.DEBUG, format='%(levelname)s - %(message)s')
 
