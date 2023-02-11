@@ -1,6 +1,6 @@
 # RLP TMR2023 - Beach Cleaning Robot - Team Prosito
 
-![Tests](https://github.com/AgustinZavalaA/RLP_TMR2023/actions/workflows/tests.yml/badge.svg)
+[![Tests](https://github.com/AgustinZavalaA/RLP_TMR2023/actions/workflows/tests.yml/badge.svg)]
 Team Prosito code repository for Beach Cleaning Robot for the Mexican Robotics Tournament 2023.
 
 ## TODO
