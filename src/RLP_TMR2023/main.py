@@ -1,5 +1,7 @@
 import logging as log
 
+import numpy as np
+
 
 def sum(a: int, b: int) -> int:
     return a + b
@@ -14,6 +16,7 @@ def main():
     log.error("error")
     log.critical("critical")
     print('Hello World')
+    log.info(np.zeros((3, 3)))
 
 
 if __name__ == '__main__':

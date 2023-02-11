@@ -1,1 +1,2 @@
-request==2.26.0
+numpy~=1.24.2
+setuptools==67.2.0
