@@ -56,7 +56,7 @@ def description() -> str:
     content += "reading and writing on the Blackboard in interesting ways.\n"
 
     if py_trees.console.has_colours:
-        banner_line = console.green + "*" * 79 + "\n" + console.reset
+        banner_line = str(console.green + "*" * 79 + "\n" + console.reset)
         s = banner_line
         s += console.bold_white + "Blackboard".center(79) + "\n" + console.reset
         s += banner_line
@@ -77,10 +77,10 @@ def epilog() -> typing.Optional[str]:
        the noodly message
     """
     if py_trees.console.has_colours:
-        return (
-                console.cyan
-                + "And his noodly appendage reached forth to tickle the blessed...\n"
-                + console.reset
+        return str(
+            console.cyan
+            + "And his noodly appendage reached forth to tickle the blessed...\n"
+            + console.reset
         )
     else:
         return None

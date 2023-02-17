@@ -77,7 +77,7 @@ def description() -> str:
         s += banner_line
     else:
         s = content
-    return s
+    return str(s)
 
 
 def epilog() -> typing.Optional[str]:
@@ -88,10 +88,10 @@ def epilog() -> typing.Optional[str]:
        the noodly message
     """
     if py_trees.console.has_colours:
-        return (
-                console.cyan
-                + "And his noodly appendage reached forth to tickle the blessed...\n"
-                + console.reset
+        return str(
+            console.cyan
+            + "And his noodly appendage reached forth to tickle the blessed...\n"
+            + console.reset
         )
     else:
         return None
