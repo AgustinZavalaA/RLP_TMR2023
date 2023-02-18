@@ -1,9 +1,10 @@
 import enum
 import logging as log
+import platform
 import time
 from abc import abstractmethod
 
-from RLP_TMR2023.HardwareControllers.Singleton import Singleton
+from RLP_TMR2023.hardware_controllers.singleton import Singleton
 
 try:
     import RPi.GPIO as GPIO
@@ -11,7 +12,7 @@ except ImportError:
     log.warning("RPi.GPIO not installed, using mock instead")
 
 
-# TODO: cambiar nombre de este enum
+# TODO: probably change the name of this enum
 class MotorSide(enum.Enum):
     LEFT = enum.auto()
     RIGHT = enum.auto()
@@ -47,6 +48,7 @@ class MotorsControllerMock(MotorsControllers):
 
     def __init__(self):
         super().__init__()
+        log.warning("Instantiating Singleton MotorsControllerMock")
 
     def setup(self) -> None:
         log.warning("MotorsControllerMock.setup() called")
@@ -64,19 +66,66 @@ class MotorsControllerMock(MotorsControllers):
 class MotorsControllerRaspberry(MotorsControllers):
     def __init__(self):
         super().__init__()
+        # TODO: change these hardcoded values to a config file
+        # Motor 1
+        self.pin_pwm_motor_1_output = 12
+        self.pin_dir_motor_1_input = (13, 15)
+        self.pwm_motor_1: GPIO.PWM = None
+        # Motor 2
+        self.pin_pwm_motor_2_input = 35
+        self.pin_dir_motor_2_input = (16, 18)
+        self.pwm_motor_2: GPIO.PWM = None
 
     def setup(self) -> None:
-        pass
+        GPIO.setmode(GPIO.BOARD)
+
+        # Set all the motor direction pins as output
+        for pin in self.pin_dir_motor_1_input + self.pin_dir_motor_2_input:
+            GPIO.setup(pin, GPIO.OUT)
+
+        # Set all the motor pwm pins as output
+        GPIO.setup(self.pin_pwm_motor_1_output, GPIO.OUT)
+        GPIO.setup(self.pin_pwm_motor_2_input, GPIO.OUT)
+
+        # Initialize pwm objects to 100Hz (100 % duty cycle)
+        self.pwm_motor_1 = GPIO.PWM(self.pin_pwm_motor_1_output, 100)
+        self.pwm_motor_2 = GPIO.PWM(self.pin_pwm_motor_2_input, 100)
+
+        duty_cycle = 0  # set dc variable to 0 for 0%
+        self.pwm_motor_1.start(duty_cycle)  # Start PWM with 0% duty cycle
+        self.pwm_motor_2.start(duty_cycle)
 
     def stop(self) -> None:
-        pass
+        duty_cycle = 1
+        self.pwm_motor_1.ChangeDutyCycle(duty_cycle)
+        self.pwm_motor_2.ChangeDutyCycle(duty_cycle)
+
+        for pin in self.pin_dir_motor_1_input + self.pin_dir_motor_2_input:
+            GPIO.output(pin, GPIO.LOW)
 
     def move(self, motor_side: MotorSide, speed: int, direction: MotorDirection) -> None:
-        pass
+        in_pin1 = GPIO.LOW
+        in_pin2 = GPIO.HIGH
+
+        if direction == MotorDirection.FORWARD:
+            in_pin1 = GPIO.HIGH
+            in_pin2 = GPIO.LOW
+
+        if motor_side == MotorSide.LEFT:
+            GPIO.output(self.pin_dir_motor_1_input[0], in_pin1)
+            GPIO.output(self.pin_dir_motor_1_input[1], in_pin2)
+            self.pwm_motor_1.ChangeDutyCycle(speed)
+        else:
+            GPIO.output(self.pin_dir_motor_2_input[0], in_pin1)
+            GPIO.output(self.pin_dir_motor_2_input[1], in_pin2)
+            self.pwm_motor_2.ChangeDutyCycle(speed)
 
     def disable(self) -> None:
-        GPIO.cleanup()
-        pass
+        self.stop()
+        self.pwm_motor_1.stop()  # stop PWM object
+        self.pwm_motor_2.stop()  # stop PWM object
+        # TODO this should only be called when the program is exiting (maybe in main.py)
+        GPIO.cleanup()  # resets GPIO ports used back to input mode
 
 
 def motors_controller_factory(architecture: str) -> MotorsControllers:
@@ -87,78 +136,9 @@ def motors_controller_factory(architecture: str) -> MotorsControllers:
     return constructors[architecture]()
 
 
-# class Motors:
-#     def __init__(self) -> None:
-#         GPIO.setmode(GPIO.BOARD)
-#
-#         # Motor A
-#         self.PWMAIN = 12
-#         self.AIN1 = 13
-#         self.AIN2 = 15
-#         # Motor B
-#         self.PWMBIN = 35
-#         self.BIN1 = 16
-#         self.BIN2 = 18
-#
-#         GPIO.setup(self.AIN1, GPIO.OUT)
-#         GPIO.setup(self.AIN2, GPIO.OUT)
-#         GPIO.setup(self.BIN1, GPIO.OUT)
-#         GPIO.setup(self.BIN2, GPIO.OUT)
-#
-#         # Set GPIO pin 12 to output mode.
-#         GPIO.setup(self.PWMAIN, GPIO.OUT)
-#         # Initialize PWM on pwmPin 100Hz frequency
-#         self.pwm_a = GPIO.PWM(self.PWMAIN, 100)
-#
-#         GPIO.setup(self.PWMBIN, GPIO.OUT)
-#         # Initialize PWM on pwmPin 100Hz frequency
-#         self.pwm_b = GPIO.PWM(self.PWMBIN, 100)
-#
-#         dc = 0  # set dc variable to 0 for 0%
-#         self.pwm_a.start(dc)  # Start PWM with 0% duty cycle
-#         self.pwm_b.start(dc)
-#
-#     def stop(self) -> None:
-#         # GPIO.output(STBY, False)
-#         dc = 1
-#         self.pwm_a.ChangeDutyCycle(dc)
-#         self.pwm_b.ChangeDutyCycle(dc)
-#
-#         GPIO.output(self.AIN1, GPIO.LOW)
-#         GPIO.output(self.AIN2, GPIO.LOW)
-#         GPIO.output(self.BIN1, GPIO.LOW)
-#         GPIO.output(self.BIN2, GPIO.LOW)
-#
-#     def move(self, motor: bool, speed: int, direction: bool) -> None:
-#         in_pin1 = GPIO.LOW
-#         in_pin2 = GPIO.HIGH
-#
-#         if direction:
-#             in_pin1 = GPIO.HIGH
-#             in_pin2 = GPIO.LOW
-#
-#         if motor:
-#             GPIO.output(self.AIN1, in_pin1)
-#             GPIO.output(self.AIN2, in_pin2)
-#             self.pwm_a.ChangeDutyCycle(speed)
-#         else:
-#             GPIO.output(self.BIN1, in_pin1)
-#             GPIO.output(self.BIN2, in_pin2)
-#             self.pwm_b.ChangeDutyCycle(speed)
-#
-#     def disable(self) -> None:
-#         self.stop()
-#         self.pwm_a.stop()  # stop PWM
-#         self.pwm_b.stop()  # stop PWM
-#         GPIO.cleanup()  # resets GPIO ports used back to input mode
-#
-#
 def main() -> None:
     log.basicConfig(level=log.DEBUG)
-    # motors = motors_controller_factory(platform.machine())
-    motors = motors_controller_factory("armv7l")
-    motors2 = motors_controller_factory("armv7l")
-    print(id(motors) == id(motors2))
+    motors = motors_controller_factory(platform.machine())
     try:
         while True:
             motors.move(MotorSide.RIGHT, 100, MotorDirection.FORWARD)
