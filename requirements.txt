@@ -1,2 +1,5 @@
 numpy~=1.24.2
 setuptools==67.3.2
+opencv-python~=4.5.3.56
+tflite-support>=0.4.2
+protobuf>=3.18.0,<4
