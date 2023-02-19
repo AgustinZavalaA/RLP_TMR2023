@@ -3,6 +3,7 @@ import logging
 import platform
 import time
 from abc import abstractmethod
+from typing import Type, Mapping
 
 from RLP_TMR2023.constants import hardware_pins
 from RLP_TMR2023.hardware_controllers.singleton import Singleton
@@ -132,7 +133,7 @@ class MotorsControllerRaspberry(MotorsControllers):
 
 
 def motors_controller_factory(architecture: str) -> MotorsControllers:
-    constructors = {
+    constructors: Mapping[str, Type[MotorsControllers]] = {
         'x86_64': MotorsControllerMock,
         'armv7l': MotorsControllerRaspberry,
         'AMD64': MotorsControllerMock,

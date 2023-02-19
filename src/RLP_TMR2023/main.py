@@ -1,8 +1,7 @@
 import logging
+from hardware_controllers import motors_controller
 
 logging.basicConfig(level=logging.DEBUG, format="%(module)s:%(funcName)s - %(levelname)s - %(message)s")
-
-from hardware_controllers import motors_controller
 
 
 def main():

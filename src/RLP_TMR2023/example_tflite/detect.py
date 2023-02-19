@@ -38,7 +38,7 @@ def run(model: str, camera_id: int, width: int, height: int, num_threads: int,
     """
 
     # Variables to calculate FPS
-    counter, fps = 0, 0
+    counter, fps = 0, 0.0
     start_time = time.time()
 
     # Start capturing video input from the camera

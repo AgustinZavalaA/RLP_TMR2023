@@ -25,9 +25,9 @@ _TEXT_COLOR = (0, 0, 255)  # red
 
 
 def visualize(
-        image: np.ndarray,
+        image: np.ndarray,  # type: ignore
         detection_result: processor.DetectionResult,
-) -> np.ndarray:
+) -> np.ndarray:  # type: ignore
     """Draws bounding boxes on the input image and return it.
 
     Args:
