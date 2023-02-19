@@ -1,15 +1,19 @@
 import enum
-import logging as log
+import logging
 import platform
 import time
 from abc import abstractmethod
+from typing import Type, Mapping
 
+from RLP_TMR2023.constants import hardware_pins
 from RLP_TMR2023.hardware_controllers.singleton import Singleton
+
+logger = logging.getLogger(__name__)
 
 try:
     import RPi.GPIO as GPIO
 except ImportError:
-    log.warning("RPi.GPIO not installed, using mock instead")
+    logger.warning("RPi.GPIO not installed, using mock instead")
 
 
 # TODO: probably change the name of this enum
@@ -48,19 +52,19 @@ class MotorsControllerMock(MotorsControllers):
 
     def __init__(self):
         super().__init__()
-        log.warning("Instantiating Singleton MotorsControllerMock")
+        logger.info("Instantiating Singleton MotorsControllerMock")
 
     def setup(self) -> None:
-        log.warning("MotorsControllerMock.setup() called")
+        logger.info("MotorsControllerMock.setup() called")
 
     def stop(self) -> None:
-        log.warning("Stopping motors")
+        logger.info("Stopping motors")
 
     def move(self, motor_side: MotorSide, speed: int, direction: MotorDirection) -> None:
-        log.warning(f"Moving {motor_side.name} motors with speed: {speed} and direction {direction.name}")
+        logger.info(f"Moving {motor_side.name} motors with speed: {speed} and direction {direction.name}")
 
     def disable(self) -> None:
-        log.warning("Disabling motors")
+        logger.info("Disabling motors")
 
 
 class MotorsControllerRaspberry(MotorsControllers):
@@ -68,8 +72,8 @@ class MotorsControllerRaspberry(MotorsControllers):
         super().__init__()
         # TODO: change these hardcoded values to a config file
         # Motor 1
-        self.pin_pwm_motor_1_output = 12
-        self.pin_dir_motor_1_input = (13, 15)
+        self._pin_pwm_motor_1_output: int = hardware_pins.PWM_PIN_MOTOR_1
+        self._pin_dir_motor_1_input = (13, 15)
         self.pwm_motor_1: GPIO.PWM = None
         # Motor 2
         self.pin_pwm_motor_2_input = 35
@@ -80,15 +84,15 @@ class MotorsControllerRaspberry(MotorsControllers):
         GPIO.setmode(GPIO.BOARD)
 
         # Set all the motor direction pins as output
-        for pin in self.pin_dir_motor_1_input + self.pin_dir_motor_2_input:
+        for pin in self._pin_dir_motor_1_input + self.pin_dir_motor_2_input:
             GPIO.setup(pin, GPIO.OUT)
 
         # Set all the motor pwm pins as output
-        GPIO.setup(self.pin_pwm_motor_1_output, GPIO.OUT)
+        GPIO.setup(self._pin_pwm_motor_1_output, GPIO.OUT)
         GPIO.setup(self.pin_pwm_motor_2_input, GPIO.OUT)
 
         # Initialize pwm objects to 100Hz (100 % duty cycle)
-        self.pwm_motor_1 = GPIO.PWM(self.pin_pwm_motor_1_output, 100)
+        self.pwm_motor_1 = GPIO.PWM(self._pin_pwm_motor_1_output, 100)
         self.pwm_motor_2 = GPIO.PWM(self.pin_pwm_motor_2_input, 100)
 
         duty_cycle = 0  # set dc variable to 0 for 0%
@@ -100,7 +104,7 @@ class MotorsControllerRaspberry(MotorsControllers):
         self.pwm_motor_1.ChangeDutyCycle(duty_cycle)
         self.pwm_motor_2.ChangeDutyCycle(duty_cycle)
 
-        for pin in self.pin_dir_motor_1_input + self.pin_dir_motor_2_input:
+        for pin in self._pin_dir_motor_1_input + self.pin_dir_motor_2_input:
             GPIO.output(pin, GPIO.LOW)
 
     def move(self, motor_side: MotorSide, speed: int, direction: MotorDirection) -> None:
@@ -112,8 +116,8 @@ class MotorsControllerRaspberry(MotorsControllers):
             in_pin2 = GPIO.LOW
 
         if motor_side == MotorSide.LEFT:
-            GPIO.output(self.pin_dir_motor_1_input[0], in_pin1)
-            GPIO.output(self.pin_dir_motor_1_input[1], in_pin2)
+            GPIO.output(self._pin_dir_motor_1_input[0], in_pin1)
+            GPIO.output(self._pin_dir_motor_1_input[1], in_pin2)
             self.pwm_motor_1.ChangeDutyCycle(speed)
         else:
             GPIO.output(self.pin_dir_motor_2_input[0], in_pin1)
@@ -129,15 +133,16 @@ class MotorsControllerRaspberry(MotorsControllers):
 
 
 def motors_controller_factory(architecture: str) -> MotorsControllers:
-    constructors = {
+    constructors: Mapping[str, Type[MotorsControllers]] = {
         'x86_64': MotorsControllerMock,
         'armv7l': MotorsControllerRaspberry,
+        'AMD64': MotorsControllerMock,
     }
     return constructors[architecture]()
 
 
 def main() -> None:
-    log.basicConfig(level=log.DEBUG)
+    # log.basicConfig(level=log.DEBUG)
     motors = motors_controller_factory(platform.machine())
     try:
         while True:
@@ -156,7 +161,7 @@ def main() -> None:
             time.sleep(1)
     except KeyboardInterrupt:
         motors.disable()
-        log.warning("Program stopped by user")
+        logger.info("Program stopped by user")
 
 
 if __name__ == "__main__":
