@@ -144,6 +144,7 @@ def motors_controller_factory(architecture: str) -> MotorsControllers:
 def main() -> None:
     # log.basicConfig(level=log.DEBUG)
     motors = motors_controller_factory(platform.machine())
+    motors.setup()
     try:
         while True:
             motors.move(MotorSide.RIGHT, 100, MotorDirection.FORWARD)
