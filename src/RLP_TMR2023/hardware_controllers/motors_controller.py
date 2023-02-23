@@ -135,7 +135,7 @@ class MotorsControllerRaspberry(MotorsControllers):
 def motors_controller_factory(architecture: str) -> MotorsControllers:
     constructors: Mapping[str, Type[MotorsControllers]] = {
         'x86_64': MotorsControllerMock,
-        'armv7l': MotorsControllerRaspberry,
+        'aarch64': MotorsControllerRaspberry,
         'AMD64': MotorsControllerMock,
     }
     return constructors[architecture]()
