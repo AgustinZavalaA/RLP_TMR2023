@@ -1,5 +1,6 @@
 import logging
 from hardware_controllers import motors_controller
+from hardware_controllers import camera_controller
 
 logging.basicConfig(level=logging.DEBUG, format="%(module)s:%(funcName)s - %(levelname)s - %(message)s")
 
@@ -17,6 +18,9 @@ def main():
     motors_controller.main()
     pass
 
+def main2():
+    camera_controller.main()
 
 if __name__ == '__main__':
-    main()
+    # main()
+    main2()

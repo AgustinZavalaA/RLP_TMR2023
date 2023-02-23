@@ -20,6 +20,8 @@ import cv2
 from tflite_support.task import core
 from tflite_support.task import processor
 from tflite_support.task import vision
+from importlib.resources import path
+from RLP_TMR2023 import tf_models
 
 import RLP_TMR2023.example_tflite.utils as utils
 
@@ -107,6 +109,11 @@ def run(model: str, camera_id: int, width: int, height: int, num_threads: int,
     cv2.destroyAllWindows()
 
 
+def get_default_model() -> str:
+    with path(tf_models, "limpiaplayas2022v3.tflite") as model_path:
+        return str(model_path)
+
+
 def main():
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -114,7 +121,7 @@ def main():
         '--model',
         help='Path of the object detection model.',
         required=False,
-        default='efficientdet_lite0.tflite')
+        default=get_default_model())
     parser.add_argument(
         '--cameraId', help='Id of camera.', required=False, type=int, default=0)
     parser.add_argument(
