@@ -1,5 +1,5 @@
 import platform
-from typing import Optional
+from typing import Optional, Mapping, Type
 
 from RLP_TMR2023.hardware_controllers.singleton import Singleton
 from abc import abstractmethod
@@ -43,7 +43,7 @@ def get_detection(cap, detector, using_mock: bool = False) -> Optional[list[Dete
     success, image = cap.read()
     if not success:
         logger.error("Failed to read image from camera")
-        return
+        return None
 
     image = cv2.flip(image, 1)
     # Convert the image from BGR to RGB as required by the TFLite model.
@@ -78,8 +78,10 @@ def get_detection(cap, detector, using_mock: bool = False) -> Optional[list[Dete
 
 class CameraController(metaclass=Singleton):
     def __init__(self) -> None:
-        self._cap = None
+        self._cap: Optional[cv2.VideoCapture] = None
         self._detector = None
+        self._camera_width: Optional[int] = None
+        self._camera_height: Optional[int] = None
         self._model = get_default_model()
         self._camera_id = object_detection_values.CAMERA_ID
         self._number_threads = object_detection_values.NUMBER_THREADS
@@ -89,6 +91,7 @@ class CameraController(metaclass=Singleton):
     def setup(self) -> None:
         # Start capturing video input from the camera
         self._cap = cv2.VideoCapture(self._camera_id)
+        print(type(self._cap))
         self._cap.set(cv2.CAP_PROP_FRAME_WIDTH, self._camera_width)
         self._cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self._camera_height)
 
@@ -100,6 +103,7 @@ class CameraController(metaclass=Singleton):
         options = vision.ObjectDetectorOptions(
             base_options=base_options, detection_options=detection_options)
         self._detector = vision.ObjectDetector.create_from_options(options)
+        print(type(self._detector))
         pass
 
     @abstractmethod
@@ -108,7 +112,8 @@ class CameraController(metaclass=Singleton):
 
     @abstractmethod
     def disable(self) -> None:
-        self._cap.release()
+        if self._cap is not None:
+            self._cap.release()
         cv2.destroyAllWindows()
         pass
 

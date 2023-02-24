@@ -18,8 +18,10 @@ def main():
     motors_controller.main()
     pass
 
+
 def main2():
     camera_controller.main()
+
 
 if __name__ == '__main__':
     # main()
