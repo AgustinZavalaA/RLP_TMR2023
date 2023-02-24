@@ -131,5 +131,5 @@ dmypy.json
 # Intellij folder
 .idea/
 
-# tflite models folder
-tf_models/
+# tflite models
+*.tflite
