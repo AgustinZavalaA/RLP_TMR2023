@@ -79,7 +79,7 @@ def get_detection(cap, detector, using_mock: bool = False) -> Optional[list[Dete
 class CameraController(metaclass=Singleton):
     def __init__(self) -> None:
         self._cap: Optional[cv2.VideoCapture] = None
-        self._detector = None
+        self._detector: Optional[vision.object_detector.ObjectDetector] = None
         self._camera_width: Optional[int] = None
         self._camera_height: Optional[int] = None
         self._model = get_default_model()
