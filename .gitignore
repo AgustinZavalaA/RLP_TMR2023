@@ -133,3 +133,7 @@ dmypy.json
 
 # tflite models
 *.tflite
+
+# dot tree images
+*.dot
+*.png

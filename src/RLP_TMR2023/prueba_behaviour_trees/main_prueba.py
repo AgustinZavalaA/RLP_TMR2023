@@ -14,7 +14,7 @@ con ella para poder recogerla.
 """
 
 
-class DetectionToBB(py_trees.behaviour.Behaviour):
+class CameraDetectionToBB(py_trees.behaviour.Behaviour):
     def __init__(self):
         super().__init__(name="Detection_to_BB")
         self.blackboard = self.attach_blackboard_client(name=self.name)
@@ -35,10 +35,16 @@ class DetectionToBB(py_trees.behaviour.Behaviour):
         return py_trees.common.Status.SUCCESS
 
 
-def create_data_gathering() -> py_trees.behaviour.Behaviour:
+def get_data_gathering_subtree() -> py_trees.behaviour.Behaviour:
     data_gathering = py_trees.composites.Sequence(name="Data Gathering", memory=False)
-    data_gathering.add_child(DetectionToBB())
+    data_gathering.add_child(CameraDetectionToBB())
     return data_gathering
+
+
+def get_tasks_subtree() -> py_trees.behaviour.Behaviour:
+    tasks = py_trees.composites.Selector(name="Tasks", memory=False)
+    tasks.add_child(create_can_viewing_sequence())
+    return tasks
 
 
 class ConditionType(enum.Enum):
@@ -92,14 +98,14 @@ def create_can_viewing_sequence() -> py_trees.behaviour.Behaviour:
 
 
 def create_root() -> py_trees.behaviour.Behaviour:
-    root = py_trees.composites.Sequence(name="Viewing Can Example", memory=False)
+    # root = py_trees.composites.Sequence(name="Viewing Can Example", memory=False)
+    root = py_trees.composites.Parallel(name="Resilient CLaDOS BT",
+                                        policy=py_trees.common.ParallelPolicy.SuccessOnAll(
+                                            synchronise=True
+                                        ))
+    root.add_child(get_data_gathering_subtree())
 
-    root.add_child(create_data_gathering())
-
-    root.add_child(create_can_viewing_sequence())
-
-    # handle the case when the can is not in the camera TODO: Ver implementacion del fata gathering en el tuto de ROS
-    # root.add_child(py_trees.behaviours.Failure(name="Can not be seen"))
+    root.add_child(get_tasks_subtree())
 
     return root
 
@@ -108,6 +114,7 @@ def main():
     logging.basicConfig(level=logging.DEBUG)
     behaviour_tree = create_root()
     print(py_trees.display.ascii_tree(behaviour_tree))
+    print(py_trees.display.unicode_tree(behaviour_tree))
 
     while True:
         try:
@@ -115,6 +122,9 @@ def main():
             print(py_trees.display.ascii_tree(behaviour_tree, show_status=True))
             py_trees.console.read_single_keypress()
         except KeyboardInterrupt:
+            py_trees.display.render_dot_tree(behaviour_tree,
+                                             target_directory="bt_images",
+                                             with_blackboard_variables=True)
             break
 
 
