@@ -42,7 +42,7 @@ def get_default_model() -> str:
         return str(model_path)
 
 
-def get_detection(cap, detector, using_mock: bool = False) -> Optional[list[Detection]]:
+def get_detections(cap, detector, camera_width_height, using_mock: bool = False) -> Optional[list[Detection]]:
     if using_mock:
         logger.info("Detecting objects")
     success, image = cap.read()
@@ -67,8 +67,8 @@ def get_detection(cap, detector, using_mock: bool = False) -> Optional[list[Dete
             category=d.categories[0].category_name,
             score=d.categories[0].score,
             bounding_box=BoundingBox(
-                x=d.bounding_box.origin_x - self._camera_width / 2,
-                y=d.bounding_box.origin_y - self._camera_height / 2,
+                x=d.bounding_box.origin_x - camera_width_height[0] / 2,
+                y=d.bounding_box.origin_y - camera_width_height[1] / 2,
                 width=d.bounding_box.width,
                 height=d.bounding_box.height,
             ),
@@ -139,7 +139,7 @@ class CameraControllerMock(CameraController):
         super().setup()
 
     def detect_objects(self) -> Optional[list[Detection]]:
-        return get_detection(self._cap, self._detector, using_mock=True)
+        return get_detections(self._cap, self._detector, (self._camera_width, self._camera_height), using_mock=True)
 
     def disable(self) -> None:
         logger.info("Disabling camera")
@@ -158,7 +158,7 @@ class CameraControllerRaspberry(CameraController):
         super().setup()
 
     def detect_objects(self) -> Optional[list[Detection]]:
-        return get_detection(self._cap, self._detector, using_mock=False)
+        return get_detections(self._cap, self._detector, (self._camera_width, self._camera_height), using_mock=False)
 
     def disable(self) -> None:
         logger.info("Disabling camera")

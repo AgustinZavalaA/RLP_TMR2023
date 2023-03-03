@@ -1,3 +1,4 @@
+import enum
 import logging
 
 import py_trees.common
@@ -8,7 +9,8 @@ from RLP_TMR2023.hardware_controllers.camera_controller import Detection, Boundi
 logger = logging.getLogger(__name__)
 
 """
-En este ejemplo vamos a crear un arbol que simule cuando el robot ve una lata y se tiene que alinear con ella para poder recogerla.
+En este ejemplo vamos a crear un arbol que simule cuando el robot ve una lata y se tiene que alinear
+con ella para poder recogerla.
 """
 
 
@@ -39,14 +41,30 @@ def create_data_gathering() -> py_trees.behaviour.Behaviour:
     return data_gathering
 
 
+class ConditionType(enum.Enum):
+    IN_CENTER = enum.auto()
+    ON_RIGHT = enum.auto()
+    ON_LEFT = enum.auto()
+
+
+def condition_can(blackboard, condition_type: ConditionType) -> bool:
+    if condition_type == ConditionType.IN_CENTER:
+        return_value = blackboard.detection.bounding_box.x + blackboard.detection.bounding_box.width / 2 == 0
+    elif condition_type == ConditionType.ON_RIGHT:
+        return_value = blackboard.detection.bounding_box.x + blackboard.detection.bounding_box.width / 2 > 0
+    else:
+        return_value = blackboard.detection.bounding_box.x + blackboard.detection.bounding_box.width / 2 < 0
+
+    return bool(return_value)
+
+
 def create_can_viewing_sequence() -> py_trees.behaviour.Behaviour:
     can_viewing_sequence = py_trees.composites.Selector(name="Can Viewing Selector", memory=False)
 
     # check if the can is in the center of the camera
     can_viewing_sequence.add_child(py_trees.decorators.EternalGuard(
         name="Is the can in the center of the camera?",
-        condition=lambda
-            blackboard: blackboard.detection.bounding_box.x + blackboard.detection.bounding_box.width / 2 == 0,
+        condition=lambda blackboard: condition_can(blackboard, ConditionType.IN_CENTER),
         blackboard_keys={"detection"},
         child=py_trees.behaviours.Periodic(name="Can in center", n=2)
     ))
@@ -54,8 +72,7 @@ def create_can_viewing_sequence() -> py_trees.behaviour.Behaviour:
     # check if the can is on the right side of the camera
     can_viewing_sequence.add_child(py_trees.decorators.EternalGuard(
         name="Is the can on the right side of the camera?",
-        condition=lambda
-            blackboard: blackboard.detection.bounding_box.x + blackboard.detection.bounding_box.width / 2 > 0,
+        condition=lambda blackboard: condition_can(blackboard, ConditionType.ON_RIGHT),
         blackboard_keys={"detection"},
         child=py_trees.behaviours.Success(name="Can on right side")
     ))
@@ -63,8 +80,7 @@ def create_can_viewing_sequence() -> py_trees.behaviour.Behaviour:
     # check if the can is on the left side of the camera
     can_viewing_sequence.add_child(py_trees.decorators.EternalGuard(
         name="Is the can on the left side of the camera?",
-        condition=lambda
-            blackboard: blackboard.detection.bounding_box.x + blackboard.detection.bounding_box.width / 2 < 0,
+        condition=lambda blackboard: condition_can(blackboard, ConditionType.ON_LEFT),
         blackboard_keys={"detection"},
         child=py_trees.behaviours.Success(name="Can on left side")
     ))
