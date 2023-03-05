@@ -30,15 +30,15 @@ class GoForward(py_trees.behaviour.Behaviour):
 
 
 def create_crash_subtree() -> py_trees.behaviour.Behaviour:
-    distance_threshold = 15
+    distance_limit = 15
     crash_subtree = py_trees.composites.Selector("Crash subtree", memory=False)
 
-    crash_subtree.add_child(py_trees.decorators.EternalGuard(name="About to crash?",
-                                                             child=CrashPrevention(),
-                                                             condition=lambda
-                                                                 blackboard: blackboard.distance < distance_threshold,
-                                                             blackboard_keys={"distance"},
-                                                             ))
+    crash_subtree.add_child(
+        py_trees.decorators.EternalGuard(name="About to crash?",
+                                         child=CrashPrevention(),
+                                         condition=lambda blackboard: blackboard.distance < distance_limit,
+                                         blackboard_keys={"distance"},
+                                         ))
 
     crash_subtree.add_child(GoForward())
 
