@@ -16,7 +16,6 @@ except ImportError:
     logger.warning("RPi.GPIO not installed, using mock instead")
 
 
-# TODO: probably change the name of this enum
 class MotorSide(enum.Enum):
     LEFT = enum.auto()
     RIGHT = enum.auto()
