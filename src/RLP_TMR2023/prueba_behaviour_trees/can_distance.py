@@ -9,14 +9,10 @@ logger = logging.getLogger(__name__)
 class CanViewingToBB(py_trees.behaviour.Behaviour):
     def __init__(self):
         super().__init__(name="Can distance to BB")
-        self.blackboard = self.attach_blackboard_client(name=self.name)
-        self.blackboard.register_key("distance", access=py_trees.common.Access.WRITE)
-        
-    def update(self) -> py_trees.common.Status:
-        self.blackboard.distance = 2
+        #self.blackboard = self.attach_blackboard_client(name=self.name)
+        #self.blackboard.register_key("distance", access=py_trees.common.Access.WRITE)
         logger.info("Can distance to BB")
         return py_trees.common.Status.SUCCESS
-    
 
 class Distances(enum.Enum):
     CLOSE = enum.auto()
@@ -41,11 +37,11 @@ def can_distance(distance: Distances) -> py_trees.behaviour.Behaviour:
         return return_value
     else:
         return return_value
-    
+
     return return_value
 
 def create_can_distance() -> py_trees.behaviour.Behaviour:
-    can_distance = py_trees.composites.Selector(name="Posibble scenarios", memory=False)
+    can_viewing_sequence = py_trees.composites.Selector(name="Posibble scenarios", memory=False)
     can_distance.add_child(py_trees.decorators.EternalGuard(
         name="Is the can to close?",
         condition=lambda blackboard: condition_can(blackboard, Distances.CLOSE),
@@ -64,15 +60,15 @@ def create_can_distance() -> py_trees.behaviour.Behaviour:
         # lefts blackboard variable
         child=py_trees.behaviours.Success(name="Good")
     ))
-    
+
     can_distance.add_child(py_trees.behaviours.Failure(name="Can't see the can boss"))
-    
+
     return can_distance
 
 
 def create_root() -> py_trees.behaviour.Behaviour:
     root = py_trees.composites.Selector(name="Close or far", memory=False)
-    
+
     root.add_child(get_can_distance_gathering())
     root.add_child(get_actions_subtree())
     return root
@@ -93,6 +89,6 @@ def main():
                                              target_directory="bt_images",
                                              with_blackboard_variables=True)
             break
-    
+
 if __name__ == "__main__":
     main() 
