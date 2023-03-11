@@ -24,3 +24,16 @@ They follow the next structure:
 - `DistanceSensorsController`: Controls the distance sensors of the robot.
 - `OLEDDisplayController`: Controls the OLED display of the robot.
 - `BuzzerController`: Controls the buzzer of the robot.
+
+### Responsibilities
+
+#### Jesus
+
+-IMUController
+-BuzzerController
+-OLEDDisplayController
+
+#### Alfredo
+
+-ServosController
+-DistanceSensorsController
