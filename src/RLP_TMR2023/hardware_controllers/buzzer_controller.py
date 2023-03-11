@@ -15,7 +15,8 @@ class BuzzerController(metaclass=Singleton):
     def setup(self) -> None:
         pass
 
-    # TODO: remember to make this method async or multiprocessing (SUPER IMPORTANT) as it will be called from the main thread and it does not need to be blocking
+    # TODO: remember to make this method async or multiprocessing (SUPER IMPORTANT) as it will be called from the
+    #  main thread and it does not need to be blocking
     @abstractmethod
     def _background_play(self, frequency: int, duration_seconds: float) -> None:
         pass
