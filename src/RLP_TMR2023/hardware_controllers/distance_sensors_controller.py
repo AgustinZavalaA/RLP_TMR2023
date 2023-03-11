@@ -17,11 +17,8 @@ class DistanceSensorsController(metaclass=Singleton):
     def setup(self) -> None:
         pass
 
-    # TODO: read the next line, if a change is needed change the name of the function
-    # Maybe instead of a list of distances, we could return an enum indicating the distance or a bool indicating if
-    # the robot is about to collide
     @abstractmethod
-    def get_distance_list_cm(self) -> list[int]:
+    def is_about_to_collide(self) -> bool:
         pass
 
     @abstractmethod
@@ -41,9 +38,9 @@ class DistanceSensorsControllerMock(DistanceSensorsController):
     def setup(self) -> None:
         logger.info("DistanceSensorsControllerMock.setup() called")
 
-    def get_distance_list_cm(self) -> list[int]:
-        logger.info("DistanceSensorsControllerMock.get_distance_list_cm() called")
-        return [0, 0, 0, 0]
+    def is_about_to_collide(self) -> bool:
+        logger.info("Sensing distance")
+        return False
 
     def disable(self) -> None:
         logger.info("DistanceSensorsControllerMock.disable() called")
@@ -71,7 +68,7 @@ def main():
     distance_sensors.setup()
     try:
         while True:
-            print(distance_sensors.get_distance_list_cm())
+            print(distance_sensors.is_about_to_collide())
             time.sleep(0.2)
     except KeyboardInterrupt:
         distance_sensors.disable()
