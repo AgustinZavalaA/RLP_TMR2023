@@ -142,6 +142,7 @@ def motors_controller_factory(architecture: str) -> MotorsControllers:
 
 def main() -> None:
     # log.basicConfig(level=log.DEBUG)
+    logging.basicConfig(level=logging.DEBUG)
     motors = motors_controller_factory(platform.machine())
     motors.setup()
     try:
