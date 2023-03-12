@@ -137,3 +137,6 @@ dmypy.json
 # dot tree images
 *.dot
 *.png
+
+# profile files
+*.prof
