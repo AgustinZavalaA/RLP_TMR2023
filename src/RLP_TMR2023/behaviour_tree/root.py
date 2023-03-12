@@ -34,7 +34,8 @@ def get_tasks_subtree() -> py_trees.behaviour.Behaviour:
     # TODO: do the next subtrees
     tasks.add_children([
         TODOBehaviour("About to enter the water"),
-        TODOBehaviour("Has enough cans in tray"),
+        TODOBehaviour("Is stuck in the sand"),
+        TODOBehaviour("Has enough cans in tray or been more than x minutes"),
         TODOBehaviour("Looking for can"),
         TODOBehaviour("Robot Lost"),
     ])
