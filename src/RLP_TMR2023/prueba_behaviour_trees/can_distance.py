@@ -1,69 +1,85 @@
 import enum
 import logging
+from typing import Any
 
 import py_trees.common
 import py_trees.console
+from py_trees import common
+
+from RLP_TMR2023.prueba_behaviour_trees.main_prueba import condition_can
 
 logger = logging.getLogger(__name__)
 
+
 class CanViewingToBB(py_trees.behaviour.Behaviour):
+
     def __init__(self):
         super().__init__(name="Can distance to BB")
-        #self.blackboard = self.attach_blackboard_client(name=self.name)
-        #self.blackboard.register_key("distance", access=py_trees.common.Access.WRITE)
+        self.blackboard = self.attach_blackboard_client(name=self.name)
+        self.blackboard.register_key("distance", access=py_trees.common.Access.WRITE)
         logger.info("Can distance to BB")
-        return py_trees.common.Status.SUCCESS
 
+    def update(self) -> common.Status:
+        self.blackboard.detection = "ghettos"
+        return py_trees.common.Status.SUCCESS
+        pass
+
+
+# TODO
 class Distances(enum.Enum):
     CLOSE = enum.auto()
     FAR = enum.auto()
     GOOD = enum.auto()
 
+
 def get_can_distance_gathering() -> py_trees.behaviour.Behaviour:
-    can_distance = py_trees.composites.Sequence(name="Can distance", memory=False)
-    can_distance.add_child(CanViewingToBB())
-    return can_distance
+    can_distance_bb = py_trees.composites.Sequence(name="Can distance", memory=False)
+    can_distance_bb.add_child(CanViewingToBB())
+    return can_distance_bb
+
 
 def get_actions_subtree() -> py_trees.behaviour.Behaviour:
     actions = py_trees.composites.Selector(name="Actions", memory=False)
     actions.add_child(create_can_distance())
     return actions
 
-# Falta blackboard variable
-def can_distance(distance: Distances) -> py_trees.behaviour.Behaviour:
-    if distance == Distances.CLOSE:
-        return return_value
-    elif distance == Distances.FAR:
-        return return_value
-    else:
-        return return_value
 
-    return return_value
+# def can_distance(blackboard, distance: Distances) -> Distances:
+#
+#    if distance == Distances.CLOSE:
+#        return_value = distance
+#    elif distance == Distances.FAR:
+#        return_value = distance
+#    else:
+#        return_value = distance
 
-def create_can_distance() -> py_trees.behaviour.Behaviour:
-    can_viewing_sequence = py_trees.composites.Selector(name="Posibble scenarios", memory=False)
-    can_distance.add_child(py_trees.decorators.EternalGuard(
+#    return return_value
+
+
+def create_can_distance() -> py_trees.behaviour.Behaviour | Any:
+    can_viewing_sequence = py_trees.composites.Selector(name="Possible scenarios", memory=False)
+    can_viewing_sequence.add_child(py_trees.decorators.EternalGuard(
         name="Is the can to close?",
-        condition=lambda blackboard: condition_can(blackboard, Distances.CLOSE),
-        # lefts the blackboard variable
+        condition=lambda blackboard: Distances.CLOSE,
+        blackboard_keys={"distance"},
         child=py_trees.behaviours.Success(name="Close")
     ))
-    can_distance.add_child(py_trees.decorators.EternalGuard(
+    can_viewing_sequence.add_child(py_trees.decorators.EternalGuard(
         name="Is the can far?",
-        condition=lambda blackboard: condition_can(blackboard, Distances.FAR),
-        #lefts blackboard variable
+        condition=lambda blackboard: Distances.FAR,
+        blackboard_keys={"distance"},
         child=py_trees.behaviours.Success(name="Far")
     ))
-    can_distance.add_child(py_trees.decorators.EternalGuard(
+    can_viewing_sequence.add_child(py_trees.decorators.EternalGuard(
         name="Is the can in a good distance?",
-        condition=lambda blackboard: condition_can(blackboard, Distances.GOOD),
-        # lefts blackboard variable
+        condition=lambda blackboard: Distances.GOOD,
+        blackboard_keys={"distance"},
         child=py_trees.behaviours.Success(name="Good")
     ))
 
-    can_distance.add_child(py_trees.behaviours.Failure(name="Can't see the can boss"))
+    can_viewing_sequence.add_child(py_trees.behaviours.Failure(name="Can't see the can boss"))
 
-    return can_distance
+    return can_viewing_sequence
 
 
 def create_root() -> py_trees.behaviour.Behaviour:
@@ -72,6 +88,7 @@ def create_root() -> py_trees.behaviour.Behaviour:
     root.add_child(get_can_distance_gathering())
     root.add_child(get_actions_subtree())
     return root
+
 
 def main():
     logging.basicConfig(level=logging.DEBUG)
@@ -90,5 +107,6 @@ def main():
                                              with_blackboard_variables=True)
             break
 
+
 if __name__ == "__main__":
-    main() 
+    main()
