@@ -1,12 +1,9 @@
 import enum
 import logging
-from typing import Any
 
 import py_trees.common
 import py_trees.console
 from py_trees import common
-
-from RLP_TMR2023.prueba_behaviour_trees.main_prueba import condition_can
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +53,7 @@ def get_actions_subtree() -> py_trees.behaviour.Behaviour:
 #    return return_value
 
 
-def create_can_distance() -> py_trees.behaviour.Behaviour | Any:
+def create_can_distance() -> py_trees.behaviour.Behaviour:
     can_viewing_sequence = py_trees.composites.Selector(name="Possible scenarios", memory=False)
     can_viewing_sequence.add_child(py_trees.decorators.EternalGuard(
         name="Is the can to close?",
