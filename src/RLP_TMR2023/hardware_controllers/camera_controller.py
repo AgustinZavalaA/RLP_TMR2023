@@ -61,6 +61,8 @@ def get_detections(cap, detector, camera_width_height, using_mock: bool = False)
     if using_mock:
         image = visualize_detections_bounding_rects(image, detection_result)
         cv2.imshow('object_detector', image)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            raise KeyboardInterrupt
 
     detections = [
         Detection(
