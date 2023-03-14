@@ -9,6 +9,10 @@ logger = logging.getLogger(__name__)
 
 
 class CanViewingToBB(py_trees.behaviour.Behaviour):
+    """
+    This class is only for testing purposes
+    So TODO: remove it
+    """
 
     def __init__(self):
         super().__init__(name="Can distance to BB")
@@ -37,7 +41,7 @@ def get_can_distance_gathering() -> py_trees.behaviour.Behaviour:
 
 def get_actions_subtree() -> py_trees.behaviour.Behaviour:
     actions = py_trees.composites.Selector(name="Actions", memory=False)
-    actions.add_child(create_can_distance())
+    actions.add_child(create_can_distance_subtree())
     return actions
 
 
@@ -53,7 +57,7 @@ def get_actions_subtree() -> py_trees.behaviour.Behaviour:
 #    return return_value
 
 
-def create_can_distance() -> py_trees.behaviour.Behaviour:
+def create_can_distance_subtree() -> py_trees.behaviour.Behaviour:
     can_viewing_sequence = py_trees.composites.Selector(name="Possible scenarios", memory=False)
     can_viewing_sequence.add_child(py_trees.decorators.EternalGuard(
         name="Is the can to close?",
