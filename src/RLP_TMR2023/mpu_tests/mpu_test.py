@@ -17,6 +17,7 @@ mpu = MPU9250(
     mfs=AK8963_BIT_16,
     mode=AK8963_MODE_C100HZ)
 
+time.sleep(1)
 mpu.configure()
 
 var = 100
