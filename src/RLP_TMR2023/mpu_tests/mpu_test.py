@@ -8,7 +8,7 @@ from mpu9250_jmdev.registers import \
     AK8963_ADDRESS, MPU9050_ADDRESS_68, GFS_1000, AFS_8G, AK8963_BIT_16, AK8963_MODE_C100HZ
 
 mpu = MPU9250(
-    address_ak=AK8963_ADDRESS,
+    address_ak=0x68,
     address_mpu_master=MPU9050_ADDRESS_68,  # In 0x68 Address
     address_mpu_slave=None,
     bus=1,
@@ -36,7 +36,7 @@ for i in range(var):
     data_accel[i] = accel
     data_mag[i] = mag
     data_gyro[i] = gyro
-    
+
 # save a numpy array in csv file
 np.save("data_accel.csv", data_accel)
 np.save("data_mag.csv", data_mag)
