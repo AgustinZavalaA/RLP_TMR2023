@@ -1,8 +1,10 @@
+import enum
 import logging
 import platform
 import threading
 import time
 from abc import abstractmethod
+from dataclasses import dataclass
 from typing import Type, Mapping
 
 from RLP_TMR2023.hardware_controllers.singleton import Singleton
@@ -10,7 +12,37 @@ from RLP_TMR2023.hardware_controllers.singleton import Singleton
 logger = logging.getLogger(__name__)
 
 
+@dataclass
+class Note:
+    """
+    This class represents a note to be played by the buzzer
+    """
+    frequency: int
+    duration: float
+
+
+class Melody(enum.Enum):
+    """
+    This enum contains the melodies that can be played by the buzzer
+    """
+    CAN_FOUND = enum.auto()
+    ABOUT_TO_COLLIDE = enum.auto()
+
+
 class BuzzerController(metaclass=Singleton):
+    def __init__(self) -> None:
+        super().__init__()
+        self._melodies: dict[Melody, list[Note]] = {
+            Melody.CAN_FOUND: [
+                Note(262, 0.5),
+                Note(294, 0.5),
+            ],
+            Melody.ABOUT_TO_COLLIDE: [
+                Note(50, 0.5),
+                Note(12, 0.5),
+            ]
+        }
+
     @abstractmethod
     def setup(self) -> None:
         pass
@@ -18,19 +50,19 @@ class BuzzerController(metaclass=Singleton):
     # TODO: remember to make this method async or multiprocessing (SUPER IMPORTANT) as it will be called from the
     #  main thread and it does not need to be blocking
     @abstractmethod
-    def _background_play(self, frequency: int, duration_seconds: float) -> None:
+    def _background_play(self, melody: Melody) -> None:
         pass
 
-    def play(self, frequency: int, duration_seconds: float = 1) -> None:
+    def play(self, melody: Melody) -> None:
         """
         This method plays a tone with the given frequency and duration, calls the _background_play method as it is a
         blocking method
-        :param frequency: the frequency of the tone
-        :param duration_seconds: the duration of the tone in seconds
+        :param melody: the melody to play
         """
-        thread = threading.Thread(target=self._background_play, args=(frequency, duration_seconds))
-        thread.daemon = True
-        thread.start()
+        threading.Thread(
+            target=self._background_play,
+            args=(melody,),
+            daemon=True).start()
 
     @abstractmethod
     def disable(self) -> None:
@@ -49,10 +81,12 @@ class BuzzerControllerMock(BuzzerController):
     def setup(self) -> None:
         logger.info("BuzzerControllerMock.setup() called")
 
-    def _background_play(self, frequency: int, duration: float) -> None:
-        logger.info(f"Playing a tone with frequency {frequency} and duration {duration}")
-        time.sleep(duration)
-        logger.info("Done playing the tone")
+    def _background_play(self, melody: Melody) -> None:
+        logger.info(f"Playing melody {melody.name}")
+        for note in self._melodies[melody]:
+            logger.info(f"Playing a tone with frequency {note.frequency} and duration {note.duration}")
+            time.sleep(note.duration)
+        logger.info("Done playing the melody")
 
     def disable(self) -> None:
         logger.info("Disabling buzzer")
@@ -78,12 +112,10 @@ def main():
     logging.basicConfig(level=logging.INFO)
     buzzer_controller = buzzer_controller_factory(platform.machine())
     buzzer_controller.setup()
-    buzzer_controller.play(440, 1)
+    buzzer_controller.play(Melody.CAN_FOUND)
     time.sleep(0.5)
-    buzzer_controller.play(880, 0.5)
-    time.sleep(1)
-    buzzer_controller.play(1760)
-    time.sleep(1.5)
+    buzzer_controller.play(Melody.ABOUT_TO_COLLIDE)
+    time.sleep(2)
     buzzer_controller.disable()
 
 
