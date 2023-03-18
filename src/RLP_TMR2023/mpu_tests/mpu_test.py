@@ -59,11 +59,11 @@ class IMUControllerMockRaspberry(IMUController):
         )
 
     def setup(self) -> None:
-        logger.info("IMUControllerRaspberry.setup() called")
+        # logger.info("IMUControllerRaspberry.setup() called")
         self.mpu.configure()
 
     def is_robot_stuck(self) -> None:
-        logger.info("IMUControllerRaspberry.is_robot_stuck() called")
+        # logger.info("IMUControllerRaspberry.is_robot_stuck() called")
         # create a function that returns true if the robot is stuck
         gyro = self.mpu.readGyroscopeMaster()
         print(gyro)
