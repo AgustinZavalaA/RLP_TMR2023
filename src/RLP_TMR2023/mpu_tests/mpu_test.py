@@ -19,8 +19,9 @@ class IMUController(metaclass=Singleton):
     def setup(self) -> None:
         pass
 
+    # TODO change datatype latter to bool
     @abstractmethod
-    def is_robot_stuck(self) -> bool:
+    def is_robot_stuck(self) -> None:
         pass
 
     def disable(self) -> None:
@@ -35,9 +36,11 @@ class IMUControllerMock(IMUController):
     def setup(self) -> None:
         logger.info("IMUControllerMock.setup() called")
 
-    def is_robot_stuck(self) -> bool:
+    # TODO change datatype latter to bool
+    def is_robot_stuck(self) -> None:
         logger.info("IMUControllerMock.is_robot_stuck() called")
-        return False
+
+        # return False
 
     def disable(self) -> None:
         logger.info("IMUControllerMock.disable() called")
