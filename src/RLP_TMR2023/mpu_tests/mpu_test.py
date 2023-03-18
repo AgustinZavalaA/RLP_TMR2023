@@ -43,7 +43,7 @@ class IMUControllerMock(IMUController):
         logger.info("IMUControllerMock.disable() called")
 
 
-class IMUControllerRaspberry(IMUController):
+class IMUControllerMockRaspberry(IMUController):
     def __init__(self):
         super().__init__()
         logger.info("Instantiating Singleton IMUControllerRaspberry")
@@ -82,7 +82,7 @@ def imu_controller_factory(architecture: str) -> IMUController:
     constructors: Mapping[str, Type[IMUController]] = {
         "x86_64": IMUControllerMock,
         "AMD64": IMUControllerMock,
-        "aarch64": IMUControllerMockRaspberry #TODO: implement this class
+        "aarch64": IMUControllerMockRaspberry  # TODO: implement this class
     }
     return constructors[architecture]()
 
