@@ -91,7 +91,8 @@ while True:
     logging.basicConfig(level=logging.DEBUG)
     imu_controller = imu_controller_factory(platform.machine())
     imu_controller.setup()
-    imu_controller.is_robot_stuck()
+    print(imu_controller.is_robot_stuck())
+
     # print("|.....MPU9250 in 0x68 Address.....|")
     # print("Accelerometer", mpu.readAccelerometerMaster())
     # print("Gyroscope", mpu.readGyroscopeMaster())
