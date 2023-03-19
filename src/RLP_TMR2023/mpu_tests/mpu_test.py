@@ -3,6 +3,7 @@ import logging
 import time
 from abc import abstractmethod
 import platform
+import numpy as np
 from typing import Type, Mapping
 
 from mpu9250_jmdev.mpu_9250 import MPU9250
@@ -19,9 +20,8 @@ class IMUController(metaclass=Singleton):
     def setup(self) -> None:
         pass
 
-    # TODO change datatype latter to bool
     @abstractmethod
-    def is_robot_stuck(self) -> None:
+    def is_robot_stuck(self) -> bool:
         pass
 
     def disable(self) -> None:
@@ -36,9 +36,9 @@ class IMUControllerMock(IMUController):
     def setup(self) -> None:
         logger.info("IMUControllerMock.setup() called")
 
-    # TODO change datatype latter to bool
-    def is_robot_stuck(self) -> None:
+    def is_robot_stuck(self) -> bool:
         logger.info("IMUControllerMock.is_robot_stuck() called")
+        return False
 
         # return False
 
@@ -65,13 +65,33 @@ class IMUControllerMockRaspberry(IMUController):
         # logger.info("IMUControllerRaspberry.setup() called")
         self.mpu.configure()
 
-    def is_robot_stuck(self) -> None:
+    def is_robot_stuck(self) -> bool:
         # logger.info("IMUControllerRaspberry.is_robot_stuck() called")
         # create a function that returns true if the robot is stuck
+        gyro_data = np.array([])
+        accel_data = np.array([])
+
         gyro = self.mpu.readGyroscopeMaster()
-        print(gyro)
         accel = self.mpu.readAccelerometerMaster()
-        print(accel)
+
+        for i in range(0, 100):
+            # idk why mypy asks for add the np.array() to the np.append() function
+            gyro_data = np.append(gyro_data, gyro)
+            accel_data = np.append(accel_data, accel)
+
+        gyro_iqr = np.percentile(gyro_data, 75) - np.percentile(gyro_data, 25)
+        gyro_std_dev = np.std(gyro_data)
+
+        accel_iqr = np.percentile(accel_data, 75) - np.percentile(accel_data, 25)
+        accel_std_dev = np.std(accel_data)
+
+        print(f"{gyro_iqr} {gyro_std_dev} {accel_iqr} {accel_std_dev}")
+
+        if ((gyro_iqr < 0.26).all() and (gyro_std_dev < 0.21).all()) and \
+                ((accel_iqr < 0.016).all() and (accel_std_dev < 0.009).all()):
+            return True
+        else:
+            return False
 
     def disable(self) -> None:
         logger.info("IMUControllerRaspberry.disable() called")
@@ -94,7 +114,7 @@ while True:
     logging.basicConfig(level=logging.DEBUG)
     imu_controller = imu_controller_factory(platform.machine())
     imu_controller.setup()
-    imu_controller.is_robot_stuck()
+    print(imu_controller.is_robot_stuck())
 
     # print("|.....MPU9250 in 0x68 Address.....|")
     # print("Accelerometer", mpu.readAccelerometerMaster())
