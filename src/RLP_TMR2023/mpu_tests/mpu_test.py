@@ -75,7 +75,7 @@ class IMUControllerMockRaspberry(IMUController):
         accel = self.mpu.readAccelerometerMaster()
 
         for i in range(0, 100):
-            # idk why mypy asks for add the np.array() to the np.append() function
+            # IDK why mypy asks for add the np.array() to the np.append() function
             gyro_data = np.append(gyro_data, gyro)
             accel_data = np.append(accel_data, accel)
 
@@ -87,11 +87,10 @@ class IMUControllerMockRaspberry(IMUController):
 
         print(f"{gyro_iqr} {gyro_std_dev} {accel_iqr} {accel_std_dev}")
 
-        if ((gyro_iqr < 0.26).all() and (gyro_std_dev < 0.21).all()) and \
-                ((accel_iqr < 0.016).all() and (accel_std_dev < 0.009).all()):
-            return True
-        else:
+        if gyro_iqr > 5 and gyro_std_dev > 2:
             return False
+        else:
+            return True
 
     def disable(self) -> None:
         logger.info("IMUControllerRaspberry.disable() called")
@@ -115,12 +114,4 @@ while True:
     imu_controller = imu_controller_factory(platform.machine())
     imu_controller.setup()
     print(imu_controller.is_robot_stuck())
-
-    # print("|.....MPU9250 in 0x68 Address.....|")
-    # print("Accelerometer", mpu.readAccelerometerMaster())
-    # print("Gyroscope", mpu.readGyroscopeMaster())
-    # print("Magnetometer", mpu.readMagnetometerMaster())
-    # print("Temperature", mpu.readTemperatureMaster())
-    # print("\n")
-
     time.sleep(1)

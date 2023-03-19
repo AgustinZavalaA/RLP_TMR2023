@@ -1,15 +1,14 @@
-"""
-This class should be used to detect if the robot is stuck.
-"""
+# Delete when we don't need it anymore
 import logging
-import platform
 import time
 from abc import abstractmethod
+import platform
+import numpy as np
 from typing import Type, Mapping
 
-
+from mpu9250_jmdev.mpu_9250 import MPU9250
 from mpu9250_jmdev.registers import \
-    AK8963_ADDRESS, MPU9050_ADDRESS_68, GFS_1000, AFS_8G, AK8963_BIT_16, AK8963_MODE_C100HZ, MPU9250
+    MPU9050_ADDRESS_68, GFS_1000, AFS_8G, AK8963_BIT_16, AK8963_MODE_C100HZ
 
 from RLP_TMR2023.hardware_controllers.singleton import Singleton
 
@@ -17,48 +16,19 @@ logger = logging.getLogger(__name__)
 
 
 class IMUController(metaclass=Singleton):
-
-    def __init__(self):
-        self._imu = None
-        self._accel_data = None
-
     @abstractmethod
     def setup(self) -> None:
-        # Initialize MPU9250 sensor
-        self._imu = MPU9250(
-            address_ak=AK8963_ADDRESS,
-            address_mpu_master=MPU9050_ADDRESS_68,
-            address_mpu_slave=None,
-            bus=1,
-            gfs=GFS_1000,
-            afs=AFS_8G,
-            mfs=AK8963_BIT_16,
-            mode=AK8963_MODE_C100HZ)
-
-        self._imu.configure()
+        pass
 
     @abstractmethod
     def is_robot_stuck(self) -> bool:
-        # Read the accelerometer data
-        self._accel_data = self._imu.readAccelerometerMaster()
+        pass
 
-        # Check if the robot is stuck
-        if self._accel_data['x'] < 0.5 and self._accel_data['y'] < 0.5 and self._accel_data['z'] < 0.5:
-            return True
-        else:
-            return False
-
-    @abstractmethod
     def disable(self) -> None:
-        if self._imu is not None:
-            self._imu.powerDown()
+        pass
 
 
 class IMUControllerMock(IMUController):
-    """
-    This class is a mock for the IMUController class, it is used when the program is running on a computer
-    """
-
     def __init__(self):
         super().__init__()
         logger.info("Instantiating Singleton IMUControllerMock")
@@ -70,12 +40,64 @@ class IMUControllerMock(IMUController):
         logger.info("IMUControllerMock.is_robot_stuck() called")
         return False
 
+        # return False
+
     def disable(self) -> None:
         logger.info("IMUControllerMock.disable() called")
 
 
-# TODO: implement this class
-# class IMUControllerRaspberry(IMUController):
+class IMUControllerMockRaspberry(IMUController):
+    def __init__(self):
+        super().__init__()
+        logger.info("Instantiating Singleton IMUControllerRaspberry")
+        self.mpu = MPU9250(
+            address_ak=0x68,
+            address_mpu_master=MPU9050_ADDRESS_68,
+            address_mpu_slave=None,
+            bus=1,
+            gfs=GFS_1000,
+            afs=AFS_8G,
+            mfs=AK8963_BIT_16,
+            mode=AK8963_MODE_C100HZ
+        )
+
+    def setup(self) -> None:
+        # logger.info("IMUControllerRaspberry.setup() called")
+        self.mpu.configure()
+
+    def is_robot_stuck(self) -> bool:
+        # logger.info("IMUControllerRaspberry.is_robot_stuck() called")
+        # create a function that returns true if the robot is stuck
+        gyro_data = np.array([])
+        accel_data = np.array([])
+
+        gyro = self.mpu.readGyroscopeMaster()
+        accel = self.mpu.readAccelerometerMaster()
+
+        for i in range(0, 100):
+            # IDK why mypy asks for add the np.array() to the np.append() function
+            gyro_data = np.append(gyro_data, gyro)
+            accel_data = np.append(accel_data, accel)
+
+        gyro_iqr = np.percentile(gyro_data, 75) - np.percentile(gyro_data, 25)
+        gyro_std_dev = np.std(gyro_data)
+
+        accel_iqr = np.percentile(accel_data, 75) - np.percentile(accel_data, 25)
+        accel_std_dev = np.std(accel_data)
+
+        print(f"{gyro_iqr} {gyro_std_dev} {accel_iqr} {accel_std_dev}")
+        # I realize that accel_iqr and accel_std_dev are not used, the data don't change too much.
+        # But I think that we should keep them for some future implementation
+
+        if gyro_iqr > 5 and gyro_std_dev > 2:
+            return False
+        else:
+            return True
+
+    def disable(self) -> None:
+        logger.info("IMUControllerRaspberry.disable() called")
+
+
 def imu_controller_factory(architecture: str) -> IMUController:
     """
     This function is used to return the correct IMUController class depending on the platform
@@ -84,26 +106,14 @@ def imu_controller_factory(architecture: str) -> IMUController:
     constructors: Mapping[str, Type[IMUController]] = {
         "x86_64": IMUControllerMock,
         "AMD64": IMUControllerMock,
-        # "aarch64": IMUControllerMockRaspberry, #TODO: implement this class
+        "aarch64": IMUControllerMockRaspberry  # TODO: implement this class
     }
     return constructors[architecture]()
 
 
-def main():
-    """
-    This function is used to test the IMUController class
-    """
+while True:
     logging.basicConfig(level=logging.DEBUG)
     imu_controller = imu_controller_factory(platform.machine())
     imu_controller.setup()
-    try:
-        while True:
-            print(f"is_robot_stuck: {imu_controller.is_robot_stuck()}")
-            time.sleep(0.5)
-    except KeyboardInterrupt:
-        imu_controller.disable()
-        logger.info("Program stopped by user")
-
-
-if __name__ == "__main__":
-    main()
+    print(imu_controller.is_robot_stuck())
+    time.sleep(1)
