@@ -14,6 +14,6 @@ class CameraToBB(py_trees.behaviour.Behaviour):
         self._camera = camera_controller_factory(platform.machine())
 
     def update(self):
-        self._blackboard.current_frame = self._camera.detect_objects()
+        self._blackboard.current_frame = self._camera.get_current_frame()
 
         return py_trees.common.Status.SUCCESS
