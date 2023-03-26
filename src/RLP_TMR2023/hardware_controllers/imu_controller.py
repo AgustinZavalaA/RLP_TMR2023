@@ -15,6 +15,7 @@ from mpu9250_jmdev.registers import \
 from RLP_TMR2023.hardware_controllers.singleton import Singleton
 
 logger = logging.getLogger(__name__)
+NUM_SAMPLES = 50
 
 class DataRecollectedType(Enum):
     GYROSCOPE = 0
