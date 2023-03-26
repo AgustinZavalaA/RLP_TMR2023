@@ -25,6 +25,10 @@ class DisplayMessage:
     substate: str = ""
     message: str = ""
     debug: str = ""
+    
+def get_default_font() -> str:
+    with path(fonts, "font5x8.bin") as font_path:
+        return str(font_path)
 
 
 class OLEDDisplayController(metaclass=Singleton):
@@ -84,7 +88,7 @@ class OLEDDisplayControllerRaspberry(OLEDDisplayController):
     def setup(self) -> None:
         i2c = busio.I2C(SCL, SDA)
         self._oled_display = adafruit_ssd1306.SSD1306_I2C(128, 32, i2c)
-        self._font = str(path(fonts, "font5x8.bin"))
+        self._font = get_default_font()
 
         self.clear()
 
