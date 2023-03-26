@@ -83,9 +83,9 @@ while True:
     # Display image.
     new_font = "src/RLP_TMR2023/oled_screen/font5x8.bin"
     # disp.image(image)
-    disp.text('IP: ' + IP, 0, 0, 1, font=new_font)
-    disp.text('CPU load: ' + CPU, 0, 8, 1, font=new_font)
-    disp.text(MemUsage, 0, 16, 1, font=new_font)
-    disp.text(Disk, 0, 25, 1, font=new_font)
+    disp.text('IP: ' + IP, 0, 0, 1, font_name=new_font)
+    disp.text('CPU load: ' + CPU, 0, 8, 1, font_name=new_font)
+    disp.text(MemUsage, 0, 16, 1, font_name=new_font)
+    disp.text(Disk, 0, 25, 1, font_name=new_font)
     disp.show()
     time.sleep(0.1)
