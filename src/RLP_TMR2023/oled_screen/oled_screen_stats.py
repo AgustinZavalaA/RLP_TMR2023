@@ -37,3 +37,5 @@ while True:
     disp.text(Disk, 0, 25, 1, font_name=new_font)
     disp.show()
     time.sleep(0.1)
+    
+disp.fill(0)
