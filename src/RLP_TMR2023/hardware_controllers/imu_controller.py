@@ -42,7 +42,8 @@ def gyroscope_all_std_strategy(full_data: Mapping[DataRecollectedType, npt.NDArr
 def accelerometer_all_std_strategy(full_data: Mapping[DataRecollectedType, npt.NDArray[np.uint8]]) -> bool:
     data = full_data[DataRecollectedType.ACCELEROMETER]
     accel_std = np.std(data, axis=0)
-    return np.all(accel_std < 0.01) # TODO: use a config file to set the threshold
+    logger.info(f"accel_std: {accel_std}")
+    return np.all(accel_std < 0.02) # TODO: use a config file to set the threshold
 
 class IMUController(metaclass=Singleton):
     @abstractmethod
