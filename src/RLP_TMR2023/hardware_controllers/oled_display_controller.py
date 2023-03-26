@@ -62,7 +62,7 @@ class OLEDDisplayControllerMock(OLEDDisplayController):
 # TODO: Add a class for the real OLEDDisplayController
 class OLEDDisplayControllerRaspberry(OLEDDisplayController):
     def setup(self) -> None:
-        self._i2c = busio.I2C(SCL, SDA)
+        i2c = busio.I2C(SCL, SDA)
         self._oled_display = adafruit_ssd1306.SSD1306_I2C(128, 32, i2c)
         
         self._oled_display.fill(0)
