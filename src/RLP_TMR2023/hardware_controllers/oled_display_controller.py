@@ -4,6 +4,10 @@ import time
 from abc import abstractmethod
 from typing import Type, Mapping
 
+import busio
+from board import SCL, SDA
+import adafruit_ssd1306
+
 from RLP_TMR2023.hardware_controllers.singleton import Singleton
 
 logger = logging.getLogger(__name__)
@@ -56,13 +60,32 @@ class OLEDDisplayControllerMock(OLEDDisplayController):
 
 
 # TODO: Add a class for the real OLEDDisplayController
-# class OLEDDisplayControllerRaspberry(OLEDDisplayController):
+class OLEDDisplayControllerRaspberry(OLEDDisplayController):
+    def setup(self) -> None:
+        self._i2c = busio.I2C(SCL, SDA)
+        self._oled_display = adafruit_ssd1306.SSD1306_I2C(128, 32, i2c)
+        
+        self._oled_display.fill(0)
+        self._oled_display.show()
+        pass
+
+    def display(self, text: str) -> None:
+        self._save_text(text)
+        
+        self._oled_display.fill(0)
+        self._oled_display.text(text, 0, 0, 1)
+        self._oled_display.show()
+        pass
+
+    def disable(self) -> None:
+        self.display("")      
+
 
 def oled_display_controller_factory(architecture: str) -> OLEDDisplayController:
     constructors: Mapping[str, Type[OLEDDisplayController]] = {
         "x86_64": OLEDDisplayControllerMock,
         "AMD64": OLEDDisplayControllerMock,
-        # TODO: "aarch64": add the real OLEDDisplayControllerRaspberry
+        "aarch64": OLEDDisplayControllerRaspberry
     }
     return constructors[architecture]()
 
