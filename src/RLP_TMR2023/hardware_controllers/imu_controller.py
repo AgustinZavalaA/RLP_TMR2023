@@ -26,14 +26,14 @@ def gyroscope_any_iqr_strategy(full_data: Mapping[DataRecollectedType, npt.NDArr
     q1, q3 = np.percentile(data, [25, 75], axis=0)
     gyro_iqr = q3 - q1
     logger.debug(f"gyro_iqr: {gyro_iqr}")
-    return np.any(gyro_iqr > 0.1) # TODO: use a config file to set the threshold
+    return np.any(gyro_iqr > 1) # TODO: use a config file to set the threshold
 
 def gyroscope_all_iqr_strategy(full_data: Mapping[DataRecollectedType, npt.NDArray[np.uint8]]) -> bool:
     data = full_data[DataRecollectedType.GYROSCOPE]
     q1, q3 = np.percentile(data, [25, 75], axis=0)
     gyro_iqr = q3 - q1
     logger.debug(f"gyro_iqr: {gyro_iqr}")
-    return np.all(gyro_iqr > 0.1) # TODO: use a config file to set the threshold
+    return np.all(gyro_iqr > 1) # TODO: use a config file to set the threshold
 
 
 class IMUController(metaclass=Singleton):
