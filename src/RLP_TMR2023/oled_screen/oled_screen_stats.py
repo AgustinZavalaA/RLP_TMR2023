@@ -3,7 +3,6 @@ import subprocess
 
 from board import SCL, SDA
 import busio
-from PIL import Image, ImageDraw, ImageFont
 import adafruit_ssd1306
 
 # Create the I2C interface.
@@ -39,3 +38,4 @@ while True:
     time.sleep(0.1)
     
 disp.fill(0)
+disp.show()
