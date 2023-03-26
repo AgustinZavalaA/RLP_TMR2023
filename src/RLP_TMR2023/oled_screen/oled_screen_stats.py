@@ -81,6 +81,7 @@ while True:
     # draw.text((x, top + 25), Disk, font=font, fill=255)
 
     # Display image.
+    disp.fill(0)
     new_font = "src/RLP_TMR2023/oled_screen/font5x8.bin"
     # disp.image(image)
     disp.text('IP: ' + IP, 0, 0, 1, font_name=new_font)
