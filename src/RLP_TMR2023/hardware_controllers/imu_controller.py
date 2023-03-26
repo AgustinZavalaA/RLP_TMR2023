@@ -39,6 +39,11 @@ def gyroscope_all_std_strategy(full_data: Mapping[DataRecollectedType, npt.NDArr
     gyro_std = np.std(data, axis=0)
     return np.all(gyro_std < 1) # TODO: use a config file to set the threshold
 
+def accelerometer_all_std_strategy(full_data: Mapping[DataRecollectedType, npt.NDArray[np.uint8]]) -> bool:
+    data = full_data[DataRecollectedType.ACCELEROMETER]
+    accel_std = np.std(data, axis=0)
+    return np.all(accel_std < 0.01) # TODO: use a config file to set the threshold
+
 class IMUController(metaclass=Singleton):
     @abstractmethod
     def setup(self) -> None:
@@ -136,9 +141,10 @@ def main():
     imu_controller.setup()
     try:
         while True:
-            print(f"stuck all iqr gyro: {imu_controller.is_robot_stuck(gyroscope_all_iqr_strategy)}")
+            # print(f"stuck all iqr gyro: {imu_controller.is_robot_stuck(gyroscope_all_iqr_strategy)}")
             # print(f"stuck any iqr gyro: {imu_controller.is_robot_stuck(gyroscope_any_iqr_strategy)}")
             # print(f"stuck all std gyro: {imu_controller.is_robot_stuck(gyroscope_all_std_strategy)}")
+            print(f"stuck all std accel: {imu_controller.is_robot_stuck(accelerometer_all_std_strategy)}")
             time.sleep(0.1)
     except KeyboardInterrupt:
         imu_controller.disable()
