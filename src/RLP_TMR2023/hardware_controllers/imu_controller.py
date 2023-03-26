@@ -1,10 +1,12 @@
-# Delete when we don't need it anymore
 import logging
 import time
 from abc import abstractmethod
 import platform
 import numpy as np
-from typing import Type, Mapping
+import time
+import numpy.typing as npt
+from typing import Type, Mapping, Callable
+from enum import Enum
 
 from mpu9250_jmdev.mpu_9250 import MPU9250
 from mpu9250_jmdev.registers import \
@@ -14,6 +16,23 @@ from RLP_TMR2023.hardware_controllers.singleton import Singleton
 
 logger = logging.getLogger(__name__)
 
+class DataRecollectedType(Enum):
+    GYROSCOPE = 0
+    ACCELEROMETER = 1
+    
+
+def gyroscope_any_iqr_strategy(full_data: Mapping[DataRecollectedType, npt.NDArray[np.uint8]]) -> bool:
+    data = full_data[DataRecollectedType.GYROSCOPE]
+    q1, q3 = np.percentile(data, [25, 75], axis=0)
+    gyro_iqr = q3 - q1
+    return np.any(gyro_iqr > 0.1) # TODO: use a config file to set the threshold
+
+def gyroscope_all_iqr_strategy(full_data: Mapping[DataRecollectedType, npt.NDArray[np.uint8]]) -> bool:
+    data = full_data[DataRecollectedType.GYROSCOPE]
+    q1, q3 = np.percentile(data, [25, 75], axis=0)
+    gyro_iqr = q3 - q1
+    return np.all(gyro_iqr > 0.1) # TODO: use a config file to set the threshold
+
 
 class IMUController(metaclass=Singleton):
     @abstractmethod
@@ -21,7 +40,7 @@ class IMUController(metaclass=Singleton):
         pass
 
     @abstractmethod
-    def is_robot_stuck(self) -> bool:
+    def is_robot_stuck(self, strategy: Callable) -> bool:
         pass
 
     def disable(self) -> None:
@@ -36,11 +55,9 @@ class IMUControllerMock(IMUController):
     def setup(self) -> None:
         logger.info("IMUControllerMock.setup() called")
 
-    def is_robot_stuck(self) -> bool:
-        logger.info("IMUControllerMock.is_robot_stuck() called")
+    def is_robot_stuck(self, strategy: Callable) -> bool:
+        logger.info("IMUControllerMock.is_robot_stuck() called with strategy: " + str(strategy))
         return False
-
-        # return False
 
     def disable(self) -> None:
         logger.info("IMUControllerMock.disable() called")
@@ -60,42 +77,36 @@ class IMUControllerMockRaspberry(IMUController):
             mfs=AK8963_BIT_16,
             mode=AK8963_MODE_C100HZ
         )
+        
+        # TODO: implement the static values from a config file
+        self.data = {
+            DataRecollectedType.GYROSCOPE: np.zeros(shape=(100, 3)),
+            DataRecollectedType.ACCELEROMETER: np.zeros(shape=(100, 3))
+        }
+        self._data_index = 0
 
     def setup(self) -> None:
         # logger.info("IMUControllerRaspberry.setup() called")
+        self.mpu.calibrateMPU6500()
+        time.sleep(1)
         self.mpu.configure()
 
-    def is_robot_stuck(self) -> bool:
-        # logger.info("IMUControllerRaspberry.is_robot_stuck() called")
+    def is_robot_stuck(self, strategy: Callable) -> bool:
         # create a function that returns true if the robot is stuck
-        gyro_data = np.array([])
-        accel_data = np.array([])
 
         gyro = self.mpu.readGyroscopeMaster()
         accel = self.mpu.readAccelerometerMaster()
+        
+        # update current data
+        self.data[DataRecollectedType.GYROSCOPE][self._data_index] = gyro
+        self.data[DataRecollectedType.ACCELEROMETER][self._data_index] = accel
+        self._data_index = (self._data_index + 1) % 100 # TODO: use a config file to set the size of the array
 
-        for i in range(0, 100):
-            # IDK why mypy asks for add the np.array() to the np.append() function
-            gyro_data = np.append(gyro_data, gyro)
-            accel_data = np.append(accel_data, accel)
-
-        gyro_iqr = np.percentile(gyro_data, 75) - np.percentile(gyro_data, 25)
-        gyro_std_dev = np.std(gyro_data)
-
-        accel_iqr = np.percentile(accel_data, 75) - np.percentile(accel_data, 25)
-        accel_std_dev = np.std(accel_data)
-
-        print(f"{gyro_iqr} {gyro_std_dev} {accel_iqr} {accel_std_dev}")
-        # I realize that accel_iqr and accel_std_dev are not used, the data don't change too much.
-        # But I think that we should keep them for some future implementation
-
-        if gyro_iqr > 5 and gyro_std_dev > 2:
-            return False
-        else:
-            return True
+        return strategy(self.data)
 
     def disable(self) -> None:
         logger.info("IMUControllerRaspberry.disable() called")
+        
 
 
 def imu_controller_factory(architecture: str) -> IMUController:
@@ -111,9 +122,22 @@ def imu_controller_factory(architecture: str) -> IMUController:
     return constructors[architecture]()
 
 
-while True:
+def main():
+    """
+    This function is used to test the IMUController class
+    """
     logging.basicConfig(level=logging.DEBUG)
     imu_controller = imu_controller_factory(platform.machine())
     imu_controller.setup()
-    print(imu_controller.is_robot_stuck())
-    time.sleep(1)
+    try:
+        while True:
+            print(f"stuck all iqr gyro: {imu_controller.is_robot_stuck(gyroscope_all_iqr_strategy)}")
+            print(f"stuck any iqr gyro: {imu_controller.is_robot_stuck(gyroscope_any_iqr_strategy)}")
+            time.sleep(0.5)
+    except KeyboardInterrupt:
+        imu_controller.disable()
+        logger.info("Program stopped by user")
+
+
+if __name__ == "__main__":
+    main()
