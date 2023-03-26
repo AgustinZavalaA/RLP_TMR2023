@@ -2,7 +2,7 @@ import platform
 
 import py_trees.common
 
-from RLP_TMR2023.hardware_controllers.imu_controller import imu_controller_factory
+from RLP_TMR2023.hardware_controllers.imu_controller import imu_controller_factory, accelerometer_all_iqr_strategy
 
 
 class IMUToBB(py_trees.behaviour.Behaviour):
@@ -14,6 +14,6 @@ class IMUToBB(py_trees.behaviour.Behaviour):
         self._imu = imu_controller_factory(platform.machine())
 
     def update(self):
-        self._blackboard.is_robot_stuck = self._imu.is_robot_stuck()
+        self._blackboard.is_robot_stuck = self._imu.is_robot_stuck(accelerometer_all_iqr_strategy)
 
         return py_trees.common.Status.SUCCESS
