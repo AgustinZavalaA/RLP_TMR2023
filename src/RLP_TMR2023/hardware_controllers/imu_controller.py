@@ -138,7 +138,7 @@ def main():
         while True:
             print(f"stuck all iqr gyro: {imu_controller.is_robot_stuck(gyroscope_all_iqr_strategy)}")
             # print(f"stuck any iqr gyro: {imu_controller.is_robot_stuck(gyroscope_any_iqr_strategy)}")
-            print(f"stuck all std gyro: {imu_controller.is_robot_stuck(gyroscope_all_std_strategy)}")
+            # print(f"stuck all std gyro: {imu_controller.is_robot_stuck(gyroscope_all_std_strategy)}")
             time.sleep(0.1)
     except KeyboardInterrupt:
         imu_controller.disable()
