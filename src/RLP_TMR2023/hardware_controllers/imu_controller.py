@@ -15,7 +15,7 @@ from mpu9250_jmdev.registers import \
 from RLP_TMR2023.hardware_controllers.singleton import Singleton
 
 logger = logging.getLogger(__name__)
-NUM_SAMPLES = 50
+NUM_SAMPLES = 25
 
 class DataRecollectedType(Enum):
     GYROSCOPE = 0
@@ -26,16 +26,18 @@ def gyroscope_any_iqr_strategy(full_data: Mapping[DataRecollectedType, npt.NDArr
     data = full_data[DataRecollectedType.GYROSCOPE]
     q1, q3 = np.percentile(data, [25, 75], axis=0)
     gyro_iqr = q3 - q1
-    logger.debug(f"gyro_iqr: {gyro_iqr}")
     return not np.any(gyro_iqr > 5) # TODO: use a config file to set the threshold
 
 def gyroscope_all_iqr_strategy(full_data: Mapping[DataRecollectedType, npt.NDArray[np.uint8]]) -> bool:
     data = full_data[DataRecollectedType.GYROSCOPE]
     q1, q3 = np.percentile(data, [25, 75], axis=0)
     gyro_iqr = q3 - q1
-    logger.debug(f"gyro_iqr: {gyro_iqr}")
     return np.all(gyro_iqr < 5) # TODO: use a config file to set the threshold
 
+def gyroscope_all_std_strategy(full_data: Mapping[DataRecollectedType, npt.NDArray[np.uint8]]) -> bool:
+    data = full_data[DataRecollectedType.GYROSCOPE]
+    gyro_std = np.std(data, axis=0)
+    return np.all(gyro_std < 1) # TODO: use a config file to set the threshold
 
 class IMUController(metaclass=Singleton):
     @abstractmethod
@@ -135,7 +137,8 @@ def main():
     try:
         while True:
             print(f"stuck all iqr gyro: {imu_controller.is_robot_stuck(gyroscope_all_iqr_strategy)}")
-            print(f"stuck any iqr gyro: {imu_controller.is_robot_stuck(gyroscope_any_iqr_strategy)}")
+            # print(f"stuck any iqr gyro: {imu_controller.is_robot_stuck(gyroscope_any_iqr_strategy)}")
+            print(f"stuck all std gyro: {imu_controller.is_robot_stuck(gyroscope_all_std_strategy)}")
             time.sleep(0.1)
     except KeyboardInterrupt:
         imu_controller.disable()
