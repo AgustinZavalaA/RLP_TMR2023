@@ -4,6 +4,7 @@ import time
 from abc import abstractmethod
 from typing import Type, Mapping
 from dataclasses import dataclass
+from importlib.resources import  path
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +16,7 @@ except ImportError:
     logger.warning("Could not import busio, board, adafruit_ssd1306. This is expected when running on a computer")
 
 from RLP_TMR2023.hardware_controllers.singleton import Singleton
+from RLP_TMR2023.hardware_controllers import fonts
 
 
 @dataclass
@@ -82,7 +84,7 @@ class OLEDDisplayControllerRaspberry(OLEDDisplayController):
     def setup(self) -> None:
         i2c = busio.I2C(SCL, SDA)
         self._oled_display = adafruit_ssd1306.SSD1306_I2C(128, 32, i2c)
-        self._font = "src/RLP_TMR2023/oled_screen/font5x8.bin"  # TODO: Change this to a relative path (use pathlib)
+        self._font = str(path(fonts, "font5x8.bin"))
 
         self.clear()
 
