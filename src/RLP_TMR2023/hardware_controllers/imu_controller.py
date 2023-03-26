@@ -83,8 +83,8 @@ class IMUControllerMockRaspberry(IMUController):
         
         # TODO: implement the static values from a config file
         self.data = {
-            DataRecollectedType.GYROSCOPE: np.zeros(shape=(100, 3)),
-            DataRecollectedType.ACCELEROMETER: np.zeros(shape=(100, 3))
+            DataRecollectedType.GYROSCOPE: np.zeros(shape=(NUM_SAMPLES, 3)),
+            DataRecollectedType.ACCELEROMETER: np.zeros(shape=(NUM_SAMPLES, 3))
         }
         self._data_index = 0
 
@@ -103,7 +103,7 @@ class IMUControllerMockRaspberry(IMUController):
         # update current data
         self.data[DataRecollectedType.GYROSCOPE][self._data_index] = gyro
         self.data[DataRecollectedType.ACCELEROMETER][self._data_index] = accel
-        self._data_index = (self._data_index + 1) % 100 # TODO: use a config file to set the size of the array
+        self._data_index = (self._data_index + 1) % NUM_SAMPLES # TODO: use a config file to set the size of the array
 
         return strategy(self.data)
 
