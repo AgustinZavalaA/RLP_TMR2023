@@ -5,16 +5,16 @@ from abc import abstractmethod
 from typing import Type, Mapping
 from dataclasses import dataclass
 
+logger = logging.getLogger(__name__)
+
 try:
     import busio
     from board import SCL, SDA
     import adafruit_ssd1306
 except ImportError:
-    logging.warning("Could not import busio, board, adafruit_ssd1306. This is expected when running on a computer")
+    logger.warning("Could not import busio, board, adafruit_ssd1306. This is expected when running on a computer")
 
 from RLP_TMR2023.hardware_controllers.singleton import Singleton
-
-logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -34,7 +34,6 @@ class OLEDDisplayController(metaclass=Singleton):
         pass
 
     def update_message(self, state: str = None, substate: str = None, message: str = None, debug: str = None) -> None:
-        logger.debug(f"Updating display message: state={state}, substate={substate}, message={message}, debug={debug}")
         if state is not None:
             self._display_message.state = state
         if substate is not None:
