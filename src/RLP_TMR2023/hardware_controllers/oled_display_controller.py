@@ -95,7 +95,7 @@ class OLEDDisplayControllerRaspberry(OLEDDisplayController):
         self._oled_display.show()
 
     def disable(self) -> None:
-        self.display("")
+        self.update_message(state="", substate="", message="", debug="")
 
 
 def oled_display_controller_factory(architecture: str) -> OLEDDisplayController:
