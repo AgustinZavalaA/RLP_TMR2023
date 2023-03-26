@@ -1,3 +1,6 @@
+"""
+This class should be used to detect if the robot is stuck.
+"""
 import logging
 import platform
 import time
@@ -138,7 +141,7 @@ def imu_controller_factory(architecture: str) -> IMUController:
     constructors: Mapping[str, Type[IMUController]] = {
         "x86_64": IMUControllerMock,
         "AMD64": IMUControllerMock,
-        "aarch64": IMUControllerMockRaspberry  # TODO: implement this class
+        "aarch64": IMUControllerMockRaspberry
     }
     return constructors[architecture]()
 
