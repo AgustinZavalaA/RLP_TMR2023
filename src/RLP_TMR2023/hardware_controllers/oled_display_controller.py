@@ -2,9 +2,12 @@ import logging
 import platform
 import time
 from abc import abstractmethod
-from typing import Type, Mapping
 from dataclasses import dataclass
-from importlib.resources import  path
+from importlib.resources import path
+from typing import Type, Mapping, Optional
+
+from RLP_TMR2023.hardware_controllers import fonts
+from RLP_TMR2023.hardware_controllers.singleton import Singleton
 
 logger = logging.getLogger(__name__)
 
@@ -15,9 +18,6 @@ try:
 except ImportError:
     logger.warning("Could not import busio, board, adafruit_ssd1306. This is expected when running on a computer")
 
-from RLP_TMR2023.hardware_controllers.singleton import Singleton
-from RLP_TMR2023.hardware_controllers import fonts
-
 
 @dataclass
 class DisplayMessage:
@@ -25,7 +25,8 @@ class DisplayMessage:
     substate: str = ""
     message: str = ""
     debug: str = ""
-    
+
+
 def get_default_font() -> str:
     with path(fonts, "font5x8.bin") as font_path:
         return str(font_path)
@@ -39,7 +40,8 @@ class OLEDDisplayController(metaclass=Singleton):
     def setup(self) -> None:
         pass
 
-    def update_message(self, state: str = None, substate: str = None, message: str = None, debug: str = None) -> None:
+    def update_message(self, state: Optional[str] = None, substate: Optional[str] = None, message: Optional[str] = None,
+                       debug: Optional[str] = None) -> None:
         if state is not None:
             self._display_message.state = state
         if substate is not None:
@@ -48,14 +50,12 @@ class OLEDDisplayController(metaclass=Singleton):
             self._display_message.message = message
         if debug is not None:
             self._display_message.debug = debug
-            
+
         self._display()
-            
 
     @abstractmethod
     def _display(self) -> None:
         pass
-
 
     def clear(self) -> None:
         self.update_message(state="", substate="", message="", debug="")
