@@ -14,6 +14,7 @@ from tflite_support.task import vision
 from RLP_TMR2023 import tf_models
 from RLP_TMR2023.constants import object_detection_values
 from RLP_TMR2023.hardware_controllers.singleton import Singleton
+from RLP_TMR2023.image_processing.tf_object_detection import get_detections
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +35,7 @@ class CameraController(metaclass=Singleton):
         self._enable_edgetpu = object_detection_values.ENABLE_EDGETPU
         self._is_mock = False
 
-        self.detector: Optional[vision.object_detector.ObjectDetector] = None
+        self.detector: Optional[vision.ObjectDetector] = None
 
     def setup(self) -> None:
         # Start capturing video input from the camera
@@ -76,6 +77,9 @@ class CameraController(metaclass=Singleton):
         if self._cap is not None:
             self._cap.release()
         cv2.destroyAllWindows()
+
+    def show_image(self) -> None:
+        pass
 
 
 class CameraControllerMock(CameraController):
@@ -126,7 +130,11 @@ def main():
     camera.setup()
     try:
         while True:
-            camera.get_current_frame()
+            current_image = camera.get_current_frame()
+            if current_image is None:
+                continue
+            detections = get_detections(current_image, camera.detector)
+            print(detections)
     except KeyboardInterrupt:
         pass
 
