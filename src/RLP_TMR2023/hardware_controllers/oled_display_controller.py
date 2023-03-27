@@ -2,33 +2,63 @@ import logging
 import platform
 import time
 from abc import abstractmethod
-from typing import Type, Mapping
+from dataclasses import dataclass
+from importlib.resources import path
+from typing import Type, Mapping, Optional
 
+from RLP_TMR2023.hardware_controllers import fonts
 from RLP_TMR2023.hardware_controllers.singleton import Singleton
 
 logger = logging.getLogger(__name__)
 
+try:
+    import busio
+    from board import SCL, SDA
+    import adafruit_ssd1306
+except ImportError:
+    logger.warning("Could not import busio, board, adafruit_ssd1306. This is expected when running on a computer")
+
+
+@dataclass
+class DisplayMessage:
+    state: str = ""
+    substate: str = ""
+    message: str = ""
+    debug: str = ""
+
+
+def get_default_font() -> str:
+    with path(fonts, "font5x8.bin") as font_path:
+        return str(font_path)
+
 
 class OLEDDisplayController(metaclass=Singleton):
     def __init__(self):
-        self._text = ""
+        self._display_message = DisplayMessage()
 
     @abstractmethod
     def setup(self) -> None:
         pass
 
-    def _save_text(self, text: str) -> None:
-        self._text = text
+    def update_message(self, state: Optional[str] = None, substate: Optional[str] = None, message: Optional[str] = None,
+                       debug: Optional[str] = None) -> None:
+        if state is not None:
+            self._display_message.state = state
+        if substate is not None:
+            self._display_message.substate = substate
+        if message is not None:
+            self._display_message.message = message
+        if debug is not None:
+            self._display_message.debug = debug
+
+        self._display()
 
     @abstractmethod
-    def display(self, text: str) -> None:
+    def _display(self) -> None:
         pass
 
-    def append(self, text: str) -> None:
-        self.display(self._text + text)
-
     def clear(self) -> None:
-        self.display("")
+        self.update_message(state="", substate="", message="", debug="")
 
     @abstractmethod
     def disable(self) -> None:
@@ -47,38 +77,56 @@ class OLEDDisplayControllerMock(OLEDDisplayController):
     def setup(self) -> None:
         logger.info("OLEDDisplayControllerMock.setup() called")
 
-    def display(self, text: str) -> None:
-        self._save_text(text)
-        logger.info(f"Displaying text: {text}")
+    def _display(self) -> None:
+        logger.info(f"Displaying text: {self._display_message}")
 
     def disable(self) -> None:
         logger.info("Disabling OLEDDisplayControllerMock")
 
 
-# TODO: Add a class for the real OLEDDisplayController
-# class OLEDDisplayControllerRaspberry(OLEDDisplayController):
+class OLEDDisplayControllerRaspberry(OLEDDisplayController):
+    def setup(self) -> None:
+        i2c = busio.I2C(SCL, SDA)
+        self._oled_display = adafruit_ssd1306.SSD1306_I2C(128, 32, i2c)
+        self._font = get_default_font()
+
+        self.clear()
+
+    def _display(self) -> None:
+        self._oled_display.fill(0)
+        self._oled_display.text(self._display_message.state, 0, 0, 1, font_name=self._font)
+        self._oled_display.text(self._display_message.substate, 0, 8, 1, font_name=self._font)
+        self._oled_display.text(self._display_message.message, 0, 16, 1, font_name=self._font)
+        self._oled_display.text(self._display_message.debug, 0, 24, 1, font_name=self._font)
+        self._oled_display.show()
+
+    def disable(self) -> None:
+        self.update_message(state="", substate="", message="", debug="")
+
 
 def oled_display_controller_factory(architecture: str) -> OLEDDisplayController:
     constructors: Mapping[str, Type[OLEDDisplayController]] = {
         "x86_64": OLEDDisplayControllerMock,
         "AMD64": OLEDDisplayControllerMock,
-        # TODO: "aarch64": add the real OLEDDisplayControllerRaspberry
+        "aarch64": OLEDDisplayControllerRaspberry
     }
     return constructors[architecture]()
 
 
 def main():
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG)
     display = oled_display_controller_factory(platform.machine())
     display.setup()
-    display.display("Hello World!")
-    time.sleep(0.5)
-    display.append(" How are you?")
-    time.sleep(0.5)
+    display.update_message(state="Hello World!")
+    time.sleep(1)
+    display.update_message(substate="How are you?")
+    time.sleep(1)
     display.clear()
-    time.sleep(0.5)
-    display.append("I'm fine, thanks!")
-    time.sleep(0.5)
+    time.sleep(1)
+    display.update_message(message="I'm fine, thanks!")
+    time.sleep(1)
+    display.update_message(debug="HOLIS")
+    time.sleep(1)
     display.disable()
 
 
