@@ -4,7 +4,7 @@ import logging
 import py_trees.common
 import py_trees.console
 
-from RLP_TMR2023.hardware_controllers.camera_controller import Detection, BoundingBox
+from RLP_TMR2023.image_processing.tf_object_detection import Detection, BoundingBox
 
 logger = logging.getLogger(__name__)
 

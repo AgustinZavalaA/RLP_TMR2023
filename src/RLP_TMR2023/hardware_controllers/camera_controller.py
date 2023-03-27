@@ -1,40 +1,22 @@
 import logging
 import platform
 from abc import abstractmethod
-from dataclasses import dataclass
 from importlib.resources import path
 from typing import Optional, Mapping, Type
 
 import cv2
+import numpy as np
+import numpy.typing as npt
 from tflite_support.task import core
 from tflite_support.task import processor
 from tflite_support.task import vision
 
 from RLP_TMR2023 import tf_models
-from RLP_TMR2023.camera_utils.visualization import visualize_detections_bounding_rects
 from RLP_TMR2023.constants import object_detection_values
 from RLP_TMR2023.hardware_controllers.singleton import Singleton
+from RLP_TMR2023.image_processing.tf_object_detection import get_detections
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass
-class BoundingBox:
-    """
-    Bounding box of an object detected by the model
-    All coordinates are relative to the center of the image
-    """
-    x: float
-    y: float
-    width: float
-    height: float
-
-
-@dataclass
-class Detection:
-    category: str
-    score: float
-    bounding_box: BoundingBox
 
 
 def get_default_model() -> str:
@@ -42,59 +24,19 @@ def get_default_model() -> str:
         return str(model_path)
 
 
-def get_detections(cap, detector, camera_width_height, using_mock: bool = False) -> Optional[list[Detection]]:
-    if using_mock:
-        logger.info("Detecting objects")
-    success, image = cap.read()
-    if not success:
-        logger.error("Failed to read image from camera")
-        return None
-
-    image = cv2.flip(image, 1)
-    # Convert the image from BGR to RGB as required by the TFLite model.
-    rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    # Create a TensorImage object from the RGB image.
-    input_tensor = vision.TensorImage.create_from_array(rgb_image)
-    # Run object detection estimation using the model.
-    detection_result = detector.detect(input_tensor)
-    # Draw key points and edges on input image if using mock
-    if using_mock:
-        image = visualize_detections_bounding_rects(image, detection_result)
-        cv2.imshow('object_detector', image)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            raise KeyboardInterrupt
-
-    detections = [
-        Detection(
-            category=d.categories[0].category_name,
-            score=d.categories[0].score,
-            bounding_box=BoundingBox(
-                x=d.bounding_box.origin_x - camera_width_height[0] / 2,
-                y=d.bounding_box.origin_y - camera_width_height[1] / 2,
-                width=d.bounding_box.width,
-                height=d.bounding_box.height,
-            ),
-        )
-        for d in detection_result.detections
-    ]
-
-    if using_mock:
-        logger.info(f"Detection result: {detections}")
-    return detections
-
-
 class CameraController(metaclass=Singleton):
     def __init__(self) -> None:
         self._cap: Optional[cv2.VideoCapture] = None
-        self._detector: Optional[vision.object_detector.ObjectDetector] = None
         self._camera_width: Optional[int] = None
         self._camera_height: Optional[int] = None
         self._model = get_default_model()
         self._camera_id = object_detection_values.CAMERA_ID
         self._number_threads = object_detection_values.NUMBER_THREADS
         self._enable_edgetpu = object_detection_values.ENABLE_EDGETPU
+        self._is_mock = False
 
-    @abstractmethod
+        self.detector: Optional[vision.ObjectDetector] = None
+
     def setup(self) -> None:
         # Start capturing video input from the camera
         self._cap = cv2.VideoCapture(self._camera_id)
@@ -109,19 +51,34 @@ class CameraController(metaclass=Singleton):
             max_results=object_detection_values.MAX_RESULTS, score_threshold=object_detection_values.SCORE_THRESHOLD)
         options = vision.ObjectDetectorOptions(
             base_options=base_options, detection_options=detection_options)
-        self._detector = vision.ObjectDetector.create_from_options(options)
-        print(type(self._detector))
-        pass
+        self.detector = vision.ObjectDetector.create_from_options(options)
+        print(type(self.detector))
 
-    @abstractmethod
-    def detect_objects(self) -> Optional[list[Detection]]:
-        pass
+    def get_current_frame(self) -> Optional[npt.NDArray[np.uint8]]:
+        if self._cap is None:
+            logger.error("CameraController is not initialized")
+            return None
+        success, image = self._cap.read()
+        if not success:
+            logger.error("Failed to read image from camera")
+            return None
+
+        image = cv2.flip(image, 1)
+        if self._is_mock:
+            cv2.imshow('current frame', image)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                raise KeyboardInterrupt
+        # Convert the image from BGR to RGB as required by the TFLite model.
+        rgb_image: npt.NDArray[np.uint8] = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        return rgb_image
 
     @abstractmethod
     def disable(self) -> None:
         if self._cap is not None:
             self._cap.release()
         cv2.destroyAllWindows()
+
+    def show_image(self) -> None:
         pass
 
 
@@ -138,10 +95,8 @@ class CameraControllerMock(CameraController):
 
     def setup(self) -> None:
         logger.info("CameraControllerMock.setup() called")
+        self._is_mock = True
         super().setup()
-
-    def detect_objects(self) -> Optional[list[Detection]]:
-        return get_detections(self._cap, self._detector, (self._camera_width, self._camera_height), using_mock=True)
 
     def disable(self) -> None:
         logger.info("Disabling camera")
@@ -153,14 +108,6 @@ class CameraControllerRaspberry(CameraController):
         super().__init__()
         self._camera_width = object_detection_values.CAMERA_WIDTH_MOCK
         self._camera_height = object_detection_values.CAMERA_HEIGHT_MOCK
-        logger.info("Instantiating Singleton CameraControllerRaspberry")
-
-    def setup(self) -> None:
-        logger.info("CameraControllerRaspberry.setup() called")
-        super().setup()
-
-    def detect_objects(self) -> Optional[list[Detection]]:
-        return get_detections(self._cap, self._detector, (self._camera_width, self._camera_height), using_mock=False)
 
     def disable(self) -> None:
         logger.info("Disabling camera")
@@ -183,12 +130,13 @@ def main():
     camera.setup()
     try:
         while True:
-            camera.detect_objects()
-            if cv2.waitKey(5) & 0xFF == 27:
-                break
+            current_image = camera.get_current_frame()
+            if current_image is None:
+                continue
+            detections = get_detections(current_image, camera.detector)
+            print(detections)
     except KeyboardInterrupt:
         pass
-    camera.disable()
 
 
 if __name__ == '__main__':
