@@ -10,9 +10,9 @@ logger = logging.getLogger(__name__)
 
 
 class ServoPair(enum.Enum):
-    ARM = enum.auto()
-    CLAW = enum.auto()
-    TRAY = enum.auto()
+    ARM = (0, 1)
+    CLAW = (2, 3)
+    TRAY = (4, 5)
 
 
 class ServoStatus(enum.Enum):
@@ -29,6 +29,20 @@ class ServosController(metaclass=Singleton):
             ServoPair.CLAW: ServoStatus.RETRACTED,
             ServoPair.TRAY: ServoStatus.RETRACTED,
         }
+        self._servos_values = {
+            ServoPair.ARM: {
+                ServoStatus.EXPANDED: 90,  # TODO: obtain this value from a config file
+                ServoStatus.RETRACTED: 0,
+            },
+            ServoPair.CLAW: {
+                ServoStatus.EXPANDED: 30,
+                ServoStatus.RETRACTED: 0,
+            },
+            ServoPair.TRAY: {
+                ServoStatus.EXPANDED: 60,
+                ServoStatus.RETRACTED: 0,
+            },
+        }
 
     @abstractmethod
     def setup(self) -> None:
@@ -36,6 +50,10 @@ class ServosController(metaclass=Singleton):
 
     @abstractmethod
     def toggle(self, servo_pair: ServoPair) -> None:
+        pass
+
+    @abstractmethod
+    def move(self, servo_pair: ServoPair, status: ServoStatus) -> None:
         pass
 
     @abstractmethod
@@ -53,6 +71,10 @@ class ServosControllerMock(ServosController):
         logger.info("Instantiating Singleton ServosControllerMock")
 
     def setup(self) -> None:
+        # verify that the servos are in the correct position
+        for servo_pair, _ in self._servos_status.items():
+            self.move(servo_pair, ServoStatus.RETRACTED, bypass_check=True)
+
         logger.info("ServosControllerMock.setup() called")
 
     def toggle(self, servo_pair: ServoPair) -> None:
@@ -60,7 +82,21 @@ class ServosControllerMock(ServosController):
             self._servos_status[servo_pair] = ServoStatus.EXPANDED
         else:
             self._servos_status[servo_pair] = ServoStatus.RETRACTED
-        logger.info(f"Servo {servo_pair.name} is now {self._servos_status[servo_pair].name}")
+        logger.info(f"moving to {self._servos_values[servo_pair][self._servos_status[servo_pair]]}")
+        logger.info(
+            f"Servo {servo_pair.name} moved to {self._servos_values[servo_pair][self._servos_status[servo_pair]]}°"
+            f" is now {self._servos_status[servo_pair].name}")
+
+    def move(self, servo_pair: ServoPair, status: ServoStatus, bypass_check: bool = False) -> None:
+        # Check if the servo is already in the correct position
+        if not bypass_check and self._servos_status[servo_pair] == status:
+            logger.info(f"Servo {servo_pair.name} is already in the correct position")
+            return
+        # Change the status of the servo
+        self._servos_status[servo_pair] = status
+        logger.info(
+            f"Servo {servo_pair.name} moved to {self._servos_values[servo_pair][self._servos_status[servo_pair]]}°"
+            f" is now {self._servos_status[servo_pair].name}")
 
     def disable(self) -> None:
         logger.info("ServosControllerMock.disable() called")
@@ -93,6 +129,10 @@ def main():
         servos.toggle(ServoPair.CLAW)
         servos.toggle(ServoPair.TRAY)
         logger.info("")
+
+    servos.move(ServoPair.ARM, ServoStatus.EXPANDED)
+    servos.move(ServoPair.ARM, ServoStatus.RETRACTED)
+    servos.move(ServoPair.ARM, ServoStatus.RETRACTED)
 
     servos.disable()
 
