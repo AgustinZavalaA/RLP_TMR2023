@@ -2,7 +2,8 @@ import platform
 
 import py_trees.common
 
-from RLP_TMR2023.hardware_controllers.distance_sensors_controller import distance_sensors_controller_factory
+from RLP_TMR2023.hardware_controllers.distance_sensors_controller import distance_sensors_controller_factory, \
+    all_sensors_strategy
 
 
 class DistanceSensorsToBB(py_trees.behaviour.Behaviour):
@@ -14,6 +15,6 @@ class DistanceSensorsToBB(py_trees.behaviour.Behaviour):
         self._distance_sensor = distance_sensors_controller_factory(platform.machine())
 
     def update(self):
-        self._blackboard.is_robot_about_to_collide = self._distance_sensor.is_about_to_collide()
+        self._blackboard.is_robot_about_to_collide = self._distance_sensor.is_about_to_collide(all_sensors_strategy)
 
         return py_trees.common.Status.SUCCESS
