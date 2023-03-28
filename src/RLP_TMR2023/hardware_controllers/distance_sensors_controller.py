@@ -5,11 +5,29 @@ import logging
 import platform
 import time
 from abc import abstractmethod
-from typing import Type, Mapping
+from typing import Type, Mapping, Callable
+
+import smbus
 
 from RLP_TMR2023.hardware_controllers.singleton import Singleton
 
 logger = logging.getLogger(__name__)
+
+
+def all_sensors_strategy(sensor_values: tuple[int, int, int], max_distance: int) -> bool:
+    """
+    This function is used to determine if the robot is about to collide with an obstacle.
+    It returns True if the robot is about to collide with an obstacle, False otherwise.
+    """
+    return all(sensor_value < max_distance for sensor_value in sensor_values)
+
+
+def any_sensor_strategy(sensor_values: tuple[int, int, int], max_distance: int) -> bool:
+    """
+    This function is used to determine if the robot is about to collide with an obstacle.
+    It returns True if the robot is about to collide with an obstacle, False otherwise.
+    """
+    return any(sensor_value < max_distance for sensor_value in sensor_values)
 
 
 class DistanceSensorsController(metaclass=Singleton):
@@ -18,7 +36,7 @@ class DistanceSensorsController(metaclass=Singleton):
         pass
 
     @abstractmethod
-    def is_about_to_collide(self) -> bool:
+    def is_about_to_collide(self, strategy: Callable[[tuple[int, int, int], int], bool]) -> bool:
         pass
 
     @abstractmethod
@@ -38,7 +56,7 @@ class DistanceSensorsControllerMock(DistanceSensorsController):
     def setup(self) -> None:
         logger.info("DistanceSensorsControllerMock.setup() called")
 
-    def is_about_to_collide(self) -> bool:
+    def is_about_to_collide(self, strategy: Callable[[tuple[int, int, int], int], bool]) -> bool:
         logger.info("Sensing distance")
         return False
 
@@ -46,8 +64,25 @@ class DistanceSensorsControllerMock(DistanceSensorsController):
         logger.info("DistanceSensorsControllerMock.disable() called")
 
 
-# TODO implement this class
-# class DistanceSensorsControllerRaspberry(DistanceSensorsController):
+class DistanceSensorsControllerRaspberry(DistanceSensorsController):
+    def __init__(self):
+        super().__init__()
+        self._i2c_bus = None
+        self._addr = None
+        self._max_distance = 20  # TODO: get the max distance from the config file
+
+    def setup(self) -> None:
+        self._addr = 8  # TODO: get the address from the config file
+        self._i2c_bus = smbus.SMBus(self._addr)
+
+    def is_about_to_collide(self, strategy: Callable[[tuple[int, int, int], int], bool]) -> bool:
+        dist = smbus.read_byte(self._addr, force=None)
+        sensor_data = dist.split(' ', 2)
+        return strategy(sensor_data, self._max_distance)
+
+    def disable(self) -> None:
+        pass
+
 
 def distance_sensors_controller_factory(architecture: str) -> DistanceSensorsController:
     """
@@ -57,7 +92,7 @@ def distance_sensors_controller_factory(architecture: str) -> DistanceSensorsCon
     constructors: Mapping[str, Type[DistanceSensorsController]] = {
         "x86_64": DistanceSensorsControllerMock,
         "AMD64": DistanceSensorsControllerMock,
-        # "aarch64": DistanceSensorsControllerMockRaspberry, #TODO: implement this class
+        "aarch64": DistanceSensorsControllerRaspberry,
     }
     return constructors[architecture]()
 
@@ -68,7 +103,7 @@ def main():
     distance_sensors.setup()
     try:
         while True:
-            print(distance_sensors.is_about_to_collide())
+            print(distance_sensors.is_about_to_collide(all_sensors_strategy))
             time.sleep(0.2)
     except KeyboardInterrupt:
         distance_sensors.disable()
