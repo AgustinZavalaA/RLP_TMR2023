@@ -78,6 +78,7 @@ class DistanceSensorsControllerRaspberry(DistanceSensorsController):
     def is_about_to_collide(self, strategy: Callable[[tuple[int, int, int], int], bool]) -> bool:
         dist = smbus.read_byte(self._addr, force=None)
         sensor_data = dist.split(' ', 2)
+        print(sensor_data)
         return strategy(sensor_data, self._max_distance)
 
     def disable(self) -> None:
