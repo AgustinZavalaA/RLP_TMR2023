@@ -73,7 +73,7 @@ class DistanceSensorsControllerRaspberry(DistanceSensorsController):
 
     def setup(self) -> None:
         self._addr = 8  # TODO: get the address from the config file
-        self._i2c_bus = smbus.SMBus(self._addr)
+        self._i2c_bus = smbus.SMBus(1)
 
     def is_about_to_collide(self, strategy: Callable[[tuple[int, int, int], int], bool]) -> bool:
         dist = smbus.read_byte(self._addr, force=None)
