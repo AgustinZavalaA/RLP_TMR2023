@@ -4,3 +4,4 @@ opencv-python==4.7.0.68
 tflite-support>=0.4.2
 protobuf>=3.18.0,<4
 py_trees==2.2.3
+smbus~=1.1.post2

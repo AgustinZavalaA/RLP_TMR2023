@@ -15,10 +15,10 @@ class BoundingBox:
     Bounding box of an object detected by the model
     All coordinates are relative to the center of the image
     """
-    x: float
-    y: float
-    width: float
-    height: float
+    x: int
+    y: int
+    width: int
+    height: int
 
 
 @dataclass
@@ -41,8 +41,8 @@ def get_detections(rgb_image: npt.NDArray[np.uint8], detector: vision.ObjectDete
             category=d.categories[0].category_name,
             score=d.categories[0].score,
             bounding_box=BoundingBox(
-                x=d.bounding_box.origin_x - width / 2,
-                y=d.bounding_box.origin_y - height / 2,
+                x=d.bounding_box.origin_x - width // 2,
+                y=d.bounding_box.origin_y - height // 2,
                 width=d.bounding_box.width,
                 height=d.bounding_box.height,
             ),
