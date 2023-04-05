@@ -18,8 +18,8 @@ def hsv_filter(image: npt.NDArray[np.uint8], lower: npt.NDArray[np.uint8], upper
     filtered = cv2.inRange(hsv, lower, upper)
 
     kernel = np.ones((kernel_size, kernel_size), "uint8")
-    filtered = cv2.morphologyEx(filtered, cv2.MORPH_OPEN, kernel)
-    filtered = cv2.dilate(filtered, kernel, iterations=1)
+    filtered: npt.NDArray[] = cv2.morphologyEx(filtered, cv2.MORPH_OPEN, kernel)
+    filtered: npt.NDArray[np.uint8] = cv2.dilate(filtered, kernel, iterations=1)
 
     return filtered
 

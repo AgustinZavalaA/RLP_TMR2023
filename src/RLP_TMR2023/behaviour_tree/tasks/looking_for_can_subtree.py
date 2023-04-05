@@ -1,7 +1,7 @@
+import math
 import platform
 
 import cv2
-import numpy as np
 import py_trees.common
 
 from RLP_TMR2023.behaviour_tree.tasks.TODO_behaviour import TODOBehaviour
@@ -52,10 +52,10 @@ class SearchForCanWithCV(py_trees.behaviour.Behaviour):
 
         self.camera_controller = camera_controller_factory(platform.machine())
 
-    def distance(self, x, y):
+    def distance(self, x: int, y: int) -> float:
         curr_x = self.blackboard.detection.bounding_box.x
         curr_y = self.blackboard.detection.bounding_box.y
-        return np.sqrt((x - curr_x) ** 2 + (y - curr_y) ** 2)
+        return math.sqrt((x - curr_x) ** 2 + (y - curr_y) ** 2)
 
     def update(self) -> py_trees.common.Status:
         img_w, img_h = self.blackboard.current_frame.shape[1], self.blackboard.current_frame.shape[0]
