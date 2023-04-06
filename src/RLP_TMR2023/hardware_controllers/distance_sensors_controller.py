@@ -80,6 +80,12 @@ class DistanceSensorsControllerRaspberry(DistanceSensorsController):
         print(dist)
         return dist < 20
 
+    def is_about_to_collide_agustin(self, strategy: Callable[[tuple[int, int, int], int], bool]) -> bool:
+        sensor_data = self._i2c_bus.read_i2c_block_data(self._addr, 0, 3)
+        sensor_values = tuple(sensor_data)
+        logger.info(f"Sensor values: {sensor_values}")
+        return strategy(sensor_values, self._max_distance)
+
     def disable(self) -> None:
         pass
 
