@@ -77,13 +77,12 @@ class DistanceSensorsControllerRaspberry(DistanceSensorsController):
 
     def is_about_to_collide(self, strategy: Callable[[tuple[int, int, int], int], bool]) -> bool:
         dist = self._i2c_bus.read_byte_data(0x08, 0)
-        print(dist)
         return dist < 20
 
     def is_about_to_collide_agustin(self, strategy: Callable[[tuple[int, int, int], int], bool]) -> bool:
         sensor_data = self._i2c_bus.read_i2c_block_data(self._addr, 1, 4)
         sensor_values = tuple(sensor_data)
-        logger.info(f"Sensor values: {sensor_values}")
+#        logger.info(f"Sensor values: {sensor_values}")
         return strategy(sensor_values, self._max_distance)
 
     def disable(self) -> None:
@@ -109,7 +108,7 @@ def main():
     distance_sensors.setup()
     try:
         while True:
-            print(distance_sensors.is_about_to_collide_agustin(all_sensors_strategy))
+            print(distance_sensors.is_about_to_collide(all_sensors_strategy))
             time.sleep(0.2)
     except KeyboardInterrupt:
         distance_sensors.disable()
