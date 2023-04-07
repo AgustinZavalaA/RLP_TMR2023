@@ -140,6 +140,7 @@ class ServosControllerRaspberry(ServosController):
 
         # verify that the servos are in the correct position
         for servo_pair, _ in self._servos_status.items():
+            print(f"{servo_pair = }")
             self.move(servo_pair, ServoStatus.RETRACTED, bypass_check=True)
 
 
