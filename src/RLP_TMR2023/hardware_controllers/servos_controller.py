@@ -154,7 +154,8 @@ class ServosControllerRaspberry(ServosController):
             self._servos_status[servo_pair] = ServoStatus.RETRACTED
 
     def move(self, servo_pair: ServoPair, status: ServoStatus, bypass_check: bool = False) -> None:
-        s1, s2 = servo.Servo(self.pca.channels[ServoPair.value])
+        s1 = servo.Servo(self.pca.channels[ServoPair.value[0]])
+        s2 = servo.Servo(self.pca.channels[ServoPair.value[1]])
         if not bypass_check and self._servos_status[servo_pair] == status:
             s1.angle, s2.angle = self._servos_values[servo_pair][self._servos_status[servo_pair]]
             return
