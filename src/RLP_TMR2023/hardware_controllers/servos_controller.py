@@ -15,9 +15,9 @@ from RLP_TMR2023.hardware_controllers.singleton import Singleton
 logger = logging.getLogger(__name__)
 
 class ServoPair(enum.Enum):
-    ARM = (1, 2)
-    CLAW = (3, 4)
-    TRAY = (5, 6)
+    ARM = (0, 1)
+    CLAW = (2, 3)
+    TRAY = (4, 5)
 
 
 class ServoStatus(enum.Enum):
