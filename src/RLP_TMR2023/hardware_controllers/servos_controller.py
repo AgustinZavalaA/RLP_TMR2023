@@ -140,13 +140,12 @@ class ServosControllerRaspberry(ServosController):
 
         # verify that the servos are in the correct position
         for servo_pair, _ in self._servos_status.items():
-            print(f"{servo_pair = }")
             self.move(servo_pair, ServoStatus.RETRACTED, bypass_check=True)
 
 
     def toggle(self, servo_pair: ServoPair) -> None:
-        s1 = servo.Servo(self.pca.channels[ServoPair.value[0]])
-        s2 = servo.Servo(self.pca.channels[ServoPair.value[1]])
+        s1 = servo.Servo(self.pca.channels[servo_pair.value[0]])
+        s2 = servo.Servo(self.pca.channels[servo_pair.value[1]])
         if self._servos_status[servo_pair] == ServoStatus.RETRACTED:
             s1.angle, s2.angle = self._servos_values[servo_pair][self._servos_status[servo_pair]]
             self._servos_status[servo_pair] = ServoStatus.EXPANDED
@@ -155,8 +154,8 @@ class ServosControllerRaspberry(ServosController):
             self._servos_status[servo_pair] = ServoStatus.RETRACTED
 
     def move(self, servo_pair: ServoPair, status: ServoStatus, bypass_check: bool = False) -> None:
-        s1 = servo.Servo(self.pca.channels[ServoPair.value[0]])
-        s2 = servo.Servo(self.pca.channels[ServoPair.value[1]])
+        s1 = servo.Servo(self.pca.channels[servo_pair.value[0]])
+        s2 = servo.Servo(self.pca.channels[servo_pair.value[1]])
         if not bypass_check and self._servos_status[servo_pair] == status:
             s1.angle, s2.angle = self._servos_values[servo_pair][self._servos_status[servo_pair]]
             return
