@@ -136,7 +136,6 @@ class ServosControllerRaspberry(ServosController):
         self.pca = PCA9685(self.i2c)
         self.pca.frequency = 50
 
-        servo.Servo(self.pca.channels[ServoPair.values])
 
 
         # verify that the servos are in the correct position
@@ -145,7 +144,8 @@ class ServosControllerRaspberry(ServosController):
 
 
     def toggle(self, servo_pair: ServoPair) -> None:
-        s1, s2 = servo.Servo(self.pca.channels[ServoPair.values])
+        s1 = servo.Servo(self.pca.channels[ServoPair.value[0]])
+        s2 = servo.Servo(self.pca.channels[ServoPair.value[1]])
         if self._servos_status[servo_pair] == ServoStatus.RETRACTED:
             s1.angle, s2.angle = self._servos_values[servo_pair][self._servos_status[servo_pair]]
             self._servos_status[servo_pair] = ServoStatus.EXPANDED
