@@ -3,6 +3,7 @@ import logging
 import platform
 from abc import abstractmethod
 from typing import Type, Mapping
+import threading
 
 from board import SCL, SDA
 import busio
@@ -146,19 +147,26 @@ class ServosControllerRaspberry(ServosController):
     def toggle(self, servo_pair: ServoPair) -> None:
         s1 = servo.Servo(self.pca.channels[servo_pair.value[0]])
         s2 = servo.Servo(self.pca.channels[servo_pair.value[1]])
+        angle_1 = self._servos_values[servo_pair][self._servos_status[servo_pair]]
+        angle_2 = 180 - angle_1
         if self._servos_status[servo_pair] == ServoStatus.RETRACTED:
-            s1.angle, s2.angle = self._servos_values[servo_pair][self._servos_status[servo_pair]]
+            threading.Thread(target=self._move_servo, args=(s1, angle_1)).start()
+            threading.Thread(target=self._move_servo, args=(s2, angle_2)).start()
             self._servos_status[servo_pair] = ServoStatus.EXPANDED
         else:
-            s1.angle, s2.angle = self._servos_values[servo_pair][self._servos_status[servo_pair]]
+            threading.Thread(target=self._move_servo, args=(s1, angle_1)).start()
+            threading.Thread(target=self._move_servo, args=(s2, angle_2)).start()
             self._servos_status[servo_pair] = ServoStatus.RETRACTED
 
     def move(self, servo_pair: ServoPair, status: ServoStatus, bypass_check: bool = False) -> None:
+        if not bypass_check and self._servos_status[servo_pair] == status:
+            return
         s1 = servo.Servo(self.pca.channels[servo_pair.value[0]])
         s2 = servo.Servo(self.pca.channels[servo_pair.value[1]])
-        if not bypass_check and self._servos_status[servo_pair] == status:
-            s1.angle, s2.angle = self._servos_values[servo_pair][self._servos_status[servo_pair]]
-            return
+        angle_1 = self._servos_values[servo_pair][self._servos_status[servo_pair]]
+        angle_2 = 180 - angle_1
+        threading.Thread(target=self._move_servo, args=(s1, angle_1)).start()
+        threading.Thread(target=self._move_servo, args=(s2, angle_2)).start()
         self._servos_status[servo_pair] = status
 
 
