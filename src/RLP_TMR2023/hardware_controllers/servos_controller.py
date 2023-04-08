@@ -1,20 +1,19 @@
 import enum
 import logging
 import platform
+import threading
 from abc import abstractmethod
 from typing import Type, Mapping
-import threading
-import time
 
-from board import SCL, SDA
 import busio
-
 from adafruit_motor import servo
 from adafruit_pca9685 import PCA9685
+from board import SCL, SDA
 
 from RLP_TMR2023.hardware_controllers.singleton import Singleton
 
 logger = logging.getLogger(__name__)
+
 
 class ServoPair(enum.Enum):
     ARM = (0, 1)
@@ -116,28 +115,26 @@ class ServosControllerMock(ServosController):
 class ServosControllerRaspberry(ServosController):
     def __init__(self):
         super().__init__()
+        self._pca = None
+        self._i2c = None
         self._servos_status = {
             ServoPair.ARM: ServoStatus.RETRACTED,
             ServoPair.CLAW: ServoStatus.RETRACTED,
             ServoPair.TRAY: ServoStatus.RETRACTED,
         }
 
-
     def setup(self) -> None:
-        self.i2c = busio.I2C(SCL, SDA)
-        self.pca = PCA9685(self.i2c)
-        self.pca.frequency = 50
-
-
+        self._i2c = busio.I2C(SCL, SDA)
+        self._pca = PCA9685(self._i2c)
+        self._pca.frequency = 50
 
         # verify that the servos are in the correct position
         for servo_pair, _ in self._servos_status.items():
             self.move(servo_pair, ServoStatus.RETRACTED, bypass_check=True)
 
-
     def toggle(self, servo_pair: ServoPair) -> None:
-        s1 = servo.Servo(self.pca.channels[servo_pair.value[0]])
-        s2 = servo.Servo(self.pca.channels[servo_pair.value[1]])
+        s1 = servo.Servo(self._pca.channels[servo_pair.value[0]])
+        s2 = servo.Servo(self._pca.channels[servo_pair.value[1]])
         angle_1 = self._servos_values[servo_pair][self._servos_status[servo_pair]]
         angle_2 = 180 - angle_1
         if self._servos_status[servo_pair] == ServoStatus.RETRACTED:
@@ -147,7 +144,7 @@ class ServosControllerRaspberry(ServosController):
             t2.start()
             t1.join()
             t2.join()
-            print(angle_1,angle_2)
+            print(angle_1, angle_2)
             print(self._servos_status[servo_pair].name)
             self._servos_status[servo_pair] = ServoStatus.EXPANDED
         else:
@@ -157,15 +154,14 @@ class ServosControllerRaspberry(ServosController):
             t2.start()
             t1.join()
             t2.join()
-            print(angle_1,angle_2)
+            print(angle_1, angle_2)
             print(self._servos_status[servo_pair].name)
             self._servos_status[servo_pair] = ServoStatus.RETRACTED
 
     def move(self, servo_pair: ServoPair, status: ServoStatus, bypass_check: bool = False) -> None:
         if not bypass_check and self._servos_status[servo_pair] == status:
             return
-        s1 = servo.Servo(self.pca.channels[servo_pair.value[0]])
-        s2 = servo.Servo(self.pca.channels[servo_pair.value[1]])
+        s1, s2 = self._get_servos(servo_pair)
         angle_1 = self._servos_values[servo_pair][self._servos_status[servo_pair]]
         angle_2 = 180 - angle_1
         t1 = threading.Thread(target=self._move_servo, args=(s1, angle_1))
@@ -178,9 +174,15 @@ class ServosControllerRaspberry(ServosController):
         print(self._servos_status[servo_pair].name)
         self._servos_status[servo_pair] = status
 
+    def _get_servos(self, servo_pair: ServoPair) -> Tuple[servo.Servo, servo.Servo]:
+        s1 = servo.Servo(self._pca.channels[servo_pair.value[0]])
+        s2 = servo.Servo(self._pca.channels[servo_pair.value[1]])
+        return s1, s2
 
     def disable(self) -> None:
+        """ Servos don't need to be disabled on the Raspberry Pi """
         pass
+
 
 def servos_controller_factory(architecture: str) -> ServosController:
     """
