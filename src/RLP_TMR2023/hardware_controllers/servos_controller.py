@@ -120,21 +120,7 @@ class ServosControllerRaspberry(ServosController):
             ServoPair.CLAW: ServoStatus.RETRACTED,
             ServoPair.TRAY: ServoStatus.RETRACTED,
         }
-        # self._servos_values = {
-        #     ServoPair.ARM: {
-        #         ServoStatus.EXPANDED: 90,
-        #         ServoStatus.RETRACTED: 0,
-        #
-        #     },
-        #     ServoPair.CLAW: {
-        #         ServoStatus.EXPANDED: 90,
-        #         ServoStatus.RETRACTED: 0,
-        #     },
-        #     ServoPair.TRAY: {
-        #         ServoStatus.EXPANDED: 90,
-        #         ServoStatus.RETRACTED: 0,
-        #     },
-        # }
+
 
     def setup(self) -> None:
         self.i2c = busio.I2C(SCL, SDA)
