@@ -143,11 +143,13 @@ class ServosControllerRaspberry(ServosController):
             threading.Thread(target=self._move_servo, args=(s1, angle_1)).start()
             threading.Thread(target=self._move_servo, args=(s2, angle_2)).start()
             print(angle_1,angle_2)
+            print(self._servos_status[servo_pair].name)
             self._servos_status[servo_pair] = ServoStatus.EXPANDED
         else:
             threading.Thread(target=self._move_servo, args=(s1, angle_1)).start()
             threading.Thread(target=self._move_servo, args=(s2, angle_2)).start()
             print(angle_1,angle_2)
+            print(self._servos_status[servo_pair].name)
             self._servos_status[servo_pair] = ServoStatus.RETRACTED
 
     def move(self, servo_pair: ServoPair, status: ServoStatus, bypass_check: bool = False) -> None:
