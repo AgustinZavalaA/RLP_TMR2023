@@ -141,14 +141,22 @@ class ServosControllerRaspberry(ServosController):
         angle_1 = self._servos_values[servo_pair][self._servos_status[servo_pair]]
         angle_2 = 180 - angle_1
         if self._servos_status[servo_pair] == ServoStatus.RETRACTED:
-            threading.Thread(target=self._move_servo, args=(s1, angle_1)).start()
-            threading.Thread(target=self._move_servo, args=(s2, angle_2)).start()
+            t1 = threading.Thread(target=self._move_servo, args=(s1, angle_1))
+            t2 = threading.Thread(target=self._move_servo, args=(s2, angle_2))
+            t1.start()
+            t2.start()
+            t1.join()
+            t2.join()
             print(angle_1,angle_2)
             print(self._servos_status[servo_pair].name)
             self._servos_status[servo_pair] = ServoStatus.EXPANDED
         else:
-            threading.Thread(target=self._move_servo, args=(s1, angle_1)).start()
-            threading.Thread(target=self._move_servo, args=(s2, angle_2)).start()
+            t1 = threading.Thread(target=self._move_servo, args=(s1, angle_1))
+            t2 = threading.Thread(target=self._move_servo, args=(s2, angle_2))
+            t1.start()
+            t2.start()
+            t1.join()
+            t2.join()
             print(angle_1,angle_2)
             print(self._servos_status[servo_pair].name)
             self._servos_status[servo_pair] = ServoStatus.RETRACTED
@@ -160,8 +168,12 @@ class ServosControllerRaspberry(ServosController):
         s2 = servo.Servo(self.pca.channels[servo_pair.value[1]])
         angle_1 = self._servos_values[servo_pair][self._servos_status[servo_pair]]
         angle_2 = 180 - angle_1
-        threading.Thread(target=self._move_servo, args=(s1, angle_1)).start()
-        threading.Thread(target=self._move_servo, args=(s2, angle_2)).start()
+        t1 = threading.Thread(target=self._move_servo, args=(s1, angle_1))
+        t2 = threading.Thread(target=self._move_servo, args=(s2, angle_2))
+        t1.start()
+        t2.start()
+        t1.join()
+        t2.join()
         print(angle_1, angle_2)
         print(self._servos_status[servo_pair].name)
         self._servos_status[servo_pair] = status
@@ -187,14 +199,12 @@ def main():
     logging.basicConfig(level=logging.DEBUG)
     servos = servos_controller_factory(platform.machine())
     servos.setup()
-    time.sleep(1)
 
     for _ in range(2):
         servos.toggle(ServoPair.ARM)
         servos.toggle(ServoPair.CLAW)
         servos.toggle(ServoPair.TRAY)
         logger.info("")
-        time.sleep(1)
 
     servos.disable()
 
