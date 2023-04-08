@@ -42,11 +42,11 @@ class ServosController(metaclass=Singleton):
                 ServoStatus.RETRACTED: 0,
             },
             ServoPair.CLAW: {
-                ServoStatus.EXPANDED: 30,
+                ServoStatus.EXPANDED: 90,
                 ServoStatus.RETRACTED: 0,
             },
             ServoPair.TRAY: {
-                ServoStatus.EXPANDED: 60,
+                ServoStatus.EXPANDED: 90,
                 ServoStatus.RETRACTED: 0,
             },
         }
