@@ -66,6 +66,10 @@ class ServosController(metaclass=Singleton):
     def disable(self) -> None:
         pass
 
+    @staticmethod
+    def _move_servo(servo: servo.Servo, angle: int) -> None:
+        servo.angle = angle
+
 
 class ServosControllerMock(ServosController):
     """
