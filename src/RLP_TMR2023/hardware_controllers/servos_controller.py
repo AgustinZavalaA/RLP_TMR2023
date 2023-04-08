@@ -4,6 +4,7 @@ import platform
 from abc import abstractmethod
 from typing import Type, Mapping
 import threading
+import time
 
 from board import SCL, SDA
 import busio
@@ -161,6 +162,8 @@ class ServosControllerRaspberry(ServosController):
         angle_2 = 180 - angle_1
         threading.Thread(target=self._move_servo, args=(s1, angle_1)).start()
         threading.Thread(target=self._move_servo, args=(s2, angle_2)).start()
+        print(angle_1, angle_2)
+        print(self._servos_status[servo_pair].name)
         self._servos_status[servo_pair] = status
 
 
@@ -184,13 +187,14 @@ def main():
     logging.basicConfig(level=logging.DEBUG)
     servos = servos_controller_factory(platform.machine())
     servos.setup()
+    time.sleep(1)
 
     for _ in range(2):
         servos.toggle(ServoPair.ARM)
         servos.toggle(ServoPair.CLAW)
         servos.toggle(ServoPair.TRAY)
         logger.info("")
-
+        time.sleep()
 
     servos.disable()
 
