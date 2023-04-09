@@ -1,18 +1,25 @@
 import enum
 import logging
 import platform
+import threading
 from abc import abstractmethod
 from typing import Type, Mapping
 
+import busio
+from adafruit_motor import servo
+from adafruit_pca9685 import PCA9685
+from board import SCL, SDA
+
+from RLP_TMR2023.constants import servos_values
 from RLP_TMR2023.hardware_controllers.singleton import Singleton
 
 logger = logging.getLogger(__name__)
 
 
 class ServoPair(enum.Enum):
-    ARM = (0, 1)
-    CLAW = (2, 3)
-    TRAY = (4, 5)
+    ARM = servos_values.ARM_PINS
+    CLAW = servos_values.CLAW_PINS
+    TRAY = servos_values.TRAY_PINS
 
 
 class ServoStatus(enum.Enum):
@@ -31,16 +38,16 @@ class ServosController(metaclass=Singleton):
         }
         self._servos_values = {
             ServoPair.ARM: {
-                ServoStatus.EXPANDED: 90,  # TODO: obtain this value from a config file
-                ServoStatus.RETRACTED: 0,
+                ServoStatus.EXPANDED: servos_values.ARM_EXPANDED_DEGREES,
+                ServoStatus.RETRACTED: servos_values.ARM_RETRACTED_DEGREES
             },
             ServoPair.CLAW: {
-                ServoStatus.EXPANDED: 30,
-                ServoStatus.RETRACTED: 0,
+                ServoStatus.EXPANDED: servos_values.CLAW_EXPANDED_DEGREES,
+                ServoStatus.RETRACTED: servos_values.CLAW_RETRACTED_DEGREES
             },
             ServoPair.TRAY: {
-                ServoStatus.EXPANDED: 60,
-                ServoStatus.RETRACTED: 0,
+                ServoStatus.EXPANDED: servos_values.TRAY_EXPANDED_DEGREES,
+                ServoStatus.RETRACTED: servos_values.TRAY_RETRACTED_DEGREES
             },
         }
 
@@ -59,6 +66,10 @@ class ServosController(metaclass=Singleton):
     @abstractmethod
     def disable(self) -> None:
         pass
+
+    @staticmethod
+    def _move_servo(servo: servo.Servo, angle: int) -> None:
+        servo.angle = angle
 
 
 class ServosControllerMock(ServosController):
@@ -102,10 +113,62 @@ class ServosControllerMock(ServosController):
         logger.info("ServosControllerMock.disable() called")
 
 
-# TODO: implement this class
-# class ServosControllerRaspberry(ServosController):
-# TODO: you remember in setup you have to verify that the servos are in the correct position
-# also you can add any other method you need like move in the arduino repository
+class ServosControllerRaspberry(ServosController):
+    def __init__(self):
+        super().__init__()
+        self._pca = None
+        self._i2c = None
+        self._servos_status = {
+            ServoPair.ARM: ServoStatus.RETRACTED,
+            ServoPair.CLAW: ServoStatus.RETRACTED,
+            ServoPair.TRAY: ServoStatus.RETRACTED,
+        }
+
+    def setup(self) -> None:
+        self._i2c = busio.I2C(SCL, SDA)
+        self._pca = PCA9685(self._i2c)
+        self._pca.frequency = servos_values.PCA9685_FREQUENCY
+
+        # verify that the servos are in the correct position
+        for servo_pair, _ in self._servos_status.items():
+            self.move(servo_pair, ServoStatus.RETRACTED, bypass_check=True)
+
+    def toggle(self, servo_pair: ServoPair) -> None:
+        if self._servos_status[servo_pair] == ServoStatus.RETRACTED:
+            status = ServoStatus.EXPANDED
+        else:
+            status = ServoStatus.RETRACTED
+
+        self.move(servo_pair, status)
+
+    def move(self, servo_pair: ServoPair, status: ServoStatus, bypass_check: bool = False) -> None:
+        if not bypass_check and self._servos_status[servo_pair] == status:
+            return
+        s1, s2 = self._get_servos(servo_pair)
+        angle_1 = self._servos_values[servo_pair][self._servos_status[servo_pair]]
+        angle_2 = 180 - angle_1
+        t1 = threading.Thread(target=self._move_servo, args=(s1, angle_1))
+        t2 = threading.Thread(target=self._move_servo, args=(s2, angle_2))
+        t1.start()
+        t2.start()
+        t1.join()
+        t2.join()
+        print(angle_1, angle_2)  # TODO: remove all prints in this file
+        print(self._servos_status[servo_pair].name)
+        self._servos_status[servo_pair] = status
+
+    def _get_servos(self, servo_pair: ServoPair) -> tuple[servo.Servo, servo.Servo]:
+        if self._pca is None:
+            raise RuntimeError("ServosControllerRaspberry.setup() must be called before using the servos")
+        s1 = servo.Servo(self._pca.channels[servo_pair.value[0]])
+        s2 = servo.Servo(self._pca.channels[servo_pair.value[1]])
+        return s1, s2
+
+    def disable(self) -> None:
+        """ Servos don't need to be disabled on the Raspberry Pi """
+        pass
+
+
 def servos_controller_factory(architecture: str) -> ServosController:
     """
     This function is used to return the correct ServosController class depending on the platform
@@ -114,7 +177,7 @@ def servos_controller_factory(architecture: str) -> ServosController:
     constructors: Mapping[str, Type[ServosController]] = {
         "x86_64": ServosControllerMock,
         "AMD64": ServosControllerMock,
-        # "aarch64": ServosControllerMockRaspberry, #TODO: implement this class
+        "aarch64": ServosControllerRaspberry,
     }
     return constructors[architecture]()
 
@@ -129,10 +192,6 @@ def main():
         servos.toggle(ServoPair.CLAW)
         servos.toggle(ServoPair.TRAY)
         logger.info("")
-
-    servos.move(ServoPair.ARM, ServoStatus.EXPANDED)
-    servos.move(ServoPair.ARM, ServoStatus.RETRACTED)
-    servos.move(ServoPair.ARM, ServoStatus.RETRACTED)
 
     servos.disable()
 
