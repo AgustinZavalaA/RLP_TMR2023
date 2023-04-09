@@ -83,7 +83,7 @@ class DistanceSensorsControllerRaspberry(DistanceSensorsController):
         # read the first 3 bytes that are not 255
         sensor_data = []
         while len(sensor_data) < 3:
-            data = self._i2c_bus.read_byte_data(self._addr, i)
+            data = self._i2c_bus.read_byte_data(self._addr, 0)
             if data != 255:
                 sensor_data.append(data)
         sensor_data = (sensor_data[0], sensor_data[1], sensor_data[2])  # just for type hinting
