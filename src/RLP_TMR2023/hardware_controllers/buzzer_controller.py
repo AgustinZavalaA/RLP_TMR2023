@@ -7,6 +7,8 @@ from abc import abstractmethod
 from dataclasses import dataclass
 from typing import Type, Mapping
 
+import RPi.GPIO as GPIO
+
 from RLP_TMR2023.hardware_controllers.singleton import Singleton
 
 logger = logging.getLogger(__name__)
@@ -34,12 +36,12 @@ class BuzzerController(metaclass=Singleton):
         super().__init__()
         self._melodies: dict[Melody, list[Note]] = {
             Melody.CAN_FOUND: [
-                Note(262, 0.5),
-                Note(294, 0.5),
+                Note(50, 0.5),
+                Note(75, 0.5),
             ],
             Melody.ABOUT_TO_COLLIDE: [
-                Note(50, 0.5),
-                Note(12, 0.5),
+                Note(90, 1),
+                Note(20, 1),
             ]
         }
 
@@ -92,8 +94,25 @@ class BuzzerControllerMock(BuzzerController):
         logger.info("Disabling buzzer")
 
 
-# TODO: add a buzzer controller for the raspberry pi
-# class BuzzerControllerRaspberry(BuzzerController):
+class BuzzerControllerRaspberry(BuzzerController):
+    def setup(self) -> None:
+        self._buzzer_pin = 38
+        GPIO.setmode(GPIO.BOARD)
+        GPIO.setup(self._buzzer_pin, GPIO.OUT)
+
+        self._buzzer = GPIO.PWM(self._buzzer_pin, 2000)
+        self._buzzer.start(0)
+
+    def _background_play(self, melody: Melody) -> None:
+        for note in self._melodies[melody]:
+            self._buzzer.ChangeFrequency(note.frequency)
+            time.sleep(note.duration)
+        self._buzzer.ChangeFrequency(0)
+
+    def disable(self) -> None:
+        self._buzzer.stop()
+        GPIO.cleanup()
+
 
 def buzzer_controller_factory(architecture: str) -> BuzzerController:
     """
@@ -103,7 +122,7 @@ def buzzer_controller_factory(architecture: str) -> BuzzerController:
     constructors: Mapping[str, Type[BuzzerController]] = {
         "x86_64": BuzzerControllerMock,
         "AMD64": BuzzerControllerMock,
-        # TODO: add the raspberry pi constructor
+        "aarch64": BuzzerControllerRaspberry,
     }
     return constructors[architecture]()
 
