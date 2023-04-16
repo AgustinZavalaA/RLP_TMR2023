@@ -48,12 +48,18 @@ class BuzzerController(metaclass=Singleton):
                 Note(20, 1),
             ],
             Melody.STEPROBOT_IS_STUCK: [
-                Note(99, 0.1),
-                Note(0, 0.1),
-                Note(99, 0.1),
-                Note(0, 0.1),
-                Note(99, 0.5),
-                Note(0, 0.1),
+                Note(99, 0.2),
+                Note(0, 0.2),
+                Note(99, 0.2),
+                Note(0, 0.2),
+                Note(99, 0.2),
+                Note(0, 0.2),
+                Note(99, 0.2),
+                Note(0, 0.2),
+                Note(99, 0.2),
+                Note(0, 0.2),
+                Note(99, 0.2),
+                Note(0, 0.2),
             ]
         }
 
