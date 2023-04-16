@@ -6,7 +6,7 @@ triggerPIN = 38
 GPIO.setmode(GPIO.BOARD)
 GPIO.setup(triggerPIN,GPIO.OUT)
 
-buzzer = GPIO.PWM(triggerPIN, 1000) # Set frequency to 1 Khz
+buzzer = GPIO.PWM(triggerPIN, 2000) # Set frequency to 1 Khz
 buzzer.start(10) # Set dutycycle to 10
 
 time.sleep(1)
