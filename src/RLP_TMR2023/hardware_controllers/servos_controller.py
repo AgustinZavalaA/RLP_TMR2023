@@ -2,6 +2,7 @@ import enum
 import logging
 import platform
 import threading
+import time
 from abc import abstractmethod
 from typing import Type, Mapping
 
@@ -189,8 +190,11 @@ def main():
 
     for _ in range(2):
         servos.toggle(ServoPair.ARM)
+        time.sleep(0.5)
         servos.toggle(ServoPair.CLAW)
+        time.sleep(0.5)
         servos.toggle(ServoPair.TRAY)
+        time.sleep(0.5)
         logger.info("")
 
     servos.disable()
