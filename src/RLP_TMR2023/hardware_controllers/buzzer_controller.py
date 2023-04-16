@@ -112,7 +112,7 @@ class BuzzerController(metaclass=Singleton):
                 Note(20,0.1,1000),
                 Note(0,0.1),
                 Note(20,0.1,1000),
-                Note(0,0.07),
+                Note(0,0.1),
                 Note(20,0.1,1000),
                 Note(0,0.5),
             ]
