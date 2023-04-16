@@ -105,9 +105,9 @@ class BuzzerControllerRaspberry(BuzzerController):
 
     def _background_play(self, melody: Melody) -> None:
         for note in self._melodies[melody]:
-            self._buzzer.ChangeFrequency(note.frequency)
+            self._buzzer.ChangeDutyCycle(note.frequency)
             time.sleep(note.duration)
-        self._buzzer.ChangeFrequency(0)
+        self._buzzer.ChangeDutyCycle(0)
 
     def disable(self) -> None:
         self._buzzer.stop()
