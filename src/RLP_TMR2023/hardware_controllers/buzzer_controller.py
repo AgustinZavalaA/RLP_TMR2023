@@ -7,7 +7,10 @@ from abc import abstractmethod
 from dataclasses import dataclass
 from typing import Type, Mapping
 
-import RPi.GPIO as GPIO
+try:
+    import RPi.GPIO as GPIO
+except ImportError:
+    logging.getLogger(__name__).warning("RPi.GPIO not found, using mock buzzer controller")
 
 from RLP_TMR2023.hardware_controllers.singleton import Singleton
 
@@ -30,6 +33,7 @@ class Melody(enum.Enum):
     CAN_FOUND = enum.auto()
     ABOUT_TO_COLLIDE = enum.auto()
     STEPROBOT_IS_STUCK = enum.auto()
+
 
 class BuzzerController(metaclass=Singleton):
     def __init__(self) -> None:
@@ -121,6 +125,7 @@ class BuzzerControllerRaspberry(BuzzerController):
         self._buzzer.stop()
         GPIO.cleanup()
 
+
 def buzzer_controller_factory(architecture: str) -> BuzzerController:
     """
     This function returns the correct buzzer controller for the current platform
@@ -133,15 +138,22 @@ def buzzer_controller_factory(architecture: str) -> BuzzerController:
     }
     return constructors[architecture]()
 
+
 def main():
     logging.basicConfig(level=logging.INFO)
     buzzer_controller = buzzer_controller_factory(platform.machine())
     buzzer_controller.setup()
-    buzzer_controller.play(Melody.CAN_FOUND)
-    time.sleep(0.5)
-    buzzer_controller.play(Melody.ABOUT_TO_COLLIDE)
-    time.sleep(2)
-    buzzer_controller.disable()
+
+    try:
+        while True:
+            print("Select a melody to play:")
+            for i, melody in enumerate(Melody, 1):
+                print(f"{i} -> {melody.name}")
+            melody = Melody(int(input()))
+            buzzer_controller.play(melody)
+    except KeyboardInterrupt:
+        buzzer_controller.disable()
+
 
 if __name__ == "__main__":
     main()
