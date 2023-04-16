@@ -66,6 +66,8 @@ class BuzzerController(metaclass=Singleton):
                 Note(0, 0.2),
             ],
             Melody.MIAUMIAUMIAU: [
+                Note(1,0.5),
+                Note(0, 0.5),
                 Note(10,0.5),
                 Note(0, 0.5),
                 Note(20, 0.5),
