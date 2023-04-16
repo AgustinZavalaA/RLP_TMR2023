@@ -153,7 +153,7 @@ def main() -> None:
         while True:
             motors.move(MotorSide.RIGHT, 100, MotorDirection.FORWARD)
             motors.move(MotorSide.LEFT, 100, MotorDirection.FORWARD)
-            buzzer.play_sound(Melody.CAN_FOUND)
+            buzzer.play(Melody.CAN_FOUND)
             time.sleep(1.2)
 
             motors.stop()
