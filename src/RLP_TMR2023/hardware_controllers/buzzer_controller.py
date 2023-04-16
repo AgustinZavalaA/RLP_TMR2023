@@ -42,7 +42,9 @@ class BuzzerController(metaclass=Singleton):
             Melody.CAN_FOUND: [
                 Note(30, 0.1),
                 Note(0, 0.1),
-                Note(99, 0.3),
+                Note(70, 0.1),
+                Note(80, 0.1),
+                Note(90, 0.3),
             ],
             Melody.ABOUT_TO_COLLIDE: [
                 Note(90, 1),
