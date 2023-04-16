@@ -34,6 +34,7 @@ class Melody(enum.Enum):
     ABOUT_TO_COLLIDE = enum.auto()
     STEPROBOT_IS_STUCK = enum.auto()
     MIAUMIAUMIAU = enum.auto()
+    AXOLOTE_EATING = enum.auto()
 
 
 class BuzzerController(metaclass=Singleton):
