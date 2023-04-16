@@ -2,7 +2,7 @@ import sys
 import RPi.GPIO as GPIO
 import time
 
-triggerPIN = 32
+triggerPIN = 38
 GPIO.setmode(GPIO.BOARD)
 GPIO.setup(triggerPIN,GPIO.OUT)
 
