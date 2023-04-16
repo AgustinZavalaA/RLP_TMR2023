@@ -29,7 +29,7 @@ class Melody(enum.Enum):
     """
     CAN_FOUND = enum.auto()
     ABOUT_TO_COLLIDE = enum.auto()
-
+    STEPROBOT_IS_STUCK = enum.auto()
 
 class BuzzerController(metaclass=Singleton):
     def __init__(self) -> None:
@@ -42,6 +42,14 @@ class BuzzerController(metaclass=Singleton):
             Melody.ABOUT_TO_COLLIDE: [
                 Note(90, 1),
                 Note(20, 1),
+            ],
+            Melody.STEPROBOT_IS_STUCK: [
+                Note(99, 0.1),
+                Note(0, 0.1),
+                Note(99, 0.1),
+                Note(0, 0.1),
+                Note(99, 0.5),
+                Note(0, 0.1),
             ]
         }
 
@@ -113,7 +121,6 @@ class BuzzerControllerRaspberry(BuzzerController):
         self._buzzer.stop()
         GPIO.cleanup()
 
-
 def buzzer_controller_factory(architecture: str) -> BuzzerController:
     """
     This function returns the correct buzzer controller for the current platform
@@ -126,7 +133,6 @@ def buzzer_controller_factory(architecture: str) -> BuzzerController:
     }
     return constructors[architecture]()
 
-
 def main():
     logging.basicConfig(level=logging.INFO)
     buzzer_controller = buzzer_controller_factory(platform.machine())
@@ -136,7 +142,6 @@ def main():
     buzzer_controller.play(Melody.ABOUT_TO_COLLIDE)
     time.sleep(2)
     buzzer_controller.disable()
-
 
 if __name__ == "__main__":
     main()
