@@ -40,10 +40,11 @@ class BuzzerController(metaclass=Singleton):
         super().__init__()
         self._melodies: dict[Melody, list[Note]] = {
             Melody.CAN_FOUND: [
-                Note(70, 0.01),
-                Note(80, 0.01),
-                Note(90, 0.01),
-                Note(99, 0.3),
+                Note(30, 0.1),
+                Note(0, 0.1),
+                Note(70, 0.1),
+                Note(80, 0.1),
+                Note(90, 0.2),
             ],
             Melody.ABOUT_TO_COLLIDE: [
                 Note(90, 1),
