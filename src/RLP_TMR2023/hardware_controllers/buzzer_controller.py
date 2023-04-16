@@ -33,6 +33,7 @@ class Melody(enum.Enum):
     CAN_FOUND = enum.auto()
     ABOUT_TO_COLLIDE = enum.auto()
     STEPROBOT_IS_STUCK = enum.auto()
+    MIAUMIAUMIAU = enum.auto()
 
 
 class BuzzerController(metaclass=Singleton):
@@ -63,6 +64,28 @@ class BuzzerController(metaclass=Singleton):
                 Note(0, 0.2),
                 Note(99, 0.2),
                 Note(0, 0.2),
+            ],
+            Melody.MIAUMIAUMIAU: [
+                Note(10,0.5),
+                Note(0, 0.5),
+                Note(20, 0.5),
+                Note(0, 0.5),
+                Note(30, 0.5),
+                Note(0, 0.5),
+                Note(40, 0.5),
+                Note(0, 0.5),
+                Note(50, 0.5),
+                Note(0, 0.5),
+                Note(60, 0.5),
+                Note(0, 0.5),
+                Note(70, 0.5),
+                Note(0, 0.5),
+                Note(80, 0.5),
+                Note(0, 0.5),
+                Note(90, 0.5),
+                Note(0, 0.5),
+                Note(99, 0.5),
+                Note(0, 0.5),
             ]
         }
 
