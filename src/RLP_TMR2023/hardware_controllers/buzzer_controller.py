@@ -36,6 +36,7 @@ class Melody(enum.Enum):
     STEPROBOT_IS_STUCK = enum.auto()
     MIAUMIAUMIAU = enum.auto()
     AXOLOTE_EATING = enum.auto()
+    KNOCK_THE_DOOR = enum.auto()
 
 
 class BuzzerController(metaclass=Singleton):
@@ -98,6 +99,22 @@ class BuzzerController(metaclass=Singleton):
                 Note(0,0.1,),
                 Note(20,0.4,700),
                 Note(0,0.1,),
+            ],
+            Melody.KNOCK_THE_DOOR: [
+                Note(20,0.1,1000),
+                Note(0,0.2),
+                Note(40,0.1,1000),
+                Note(0,0.7),
+                Note(20,0.1,1000),
+                Note(0,0.7),
+                Note(20,0.1,1000),
+                Note(0,0.7),
+                Note(20,0.1,1000),
+                Note(0,0.1),
+                Note(20,0.1,1000),
+                Note(0,0.5),
+                Note(20,0.1,1000),
+                Note(0,0.5),
             ]
         }
 
