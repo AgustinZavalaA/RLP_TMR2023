@@ -92,11 +92,11 @@ class BuzzerController(metaclass=Singleton):
                 Note(0, 0.5),
             ],
             Melody.AXOLOTE_EATING: [
-                Note(20,0.3,500),
+                Note(20,0.3,700),
                 Note(0,0.1,),
-                Note(40,0.2,500),
+                Note(40,0.2,700),
                 Note(0,0.1,),
-                Note(20,0.4,500),
+                Note(20,0.4,700),
                 Note(0,0.1,),
             ]
         }
