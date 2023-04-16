@@ -5,7 +5,7 @@ import threading
 import time
 from abc import abstractmethod
 from dataclasses import dataclass
-from typing import Type, Mapping
+from typing import Type, Mapping, Optional
 
 try:
     import RPi.GPIO as GPIO
@@ -24,6 +24,7 @@ class Note:
     """
     frequency: int
     duration: float
+    set_frequency: Optional[int] = None
 
 
 class Melody(enum.Enum):
@@ -67,9 +68,9 @@ class BuzzerController(metaclass=Singleton):
                 Note(0, 0.2),
             ],
             Melody.MIAUMIAUMIAU: [
-                Note(1,0.5),
+                Note(1, 0.5),
                 Note(0, 0.5),
-                Note(10,0.5),
+                Note(10, 0.5),
                 Note(0, 0.5),
                 Note(20, 0.5),
                 Note(0, 0.5),
@@ -147,11 +148,20 @@ class BuzzerControllerRaspberry(BuzzerController):
         GPIO.setmode(GPIO.BOARD)
         GPIO.setup(self._buzzer_pin, GPIO.OUT)
 
-        self._buzzer = GPIO.PWM(self._buzzer_pin, 2000)
+        self._initial_frequency = 2000
+        self._current_frequency = self._initial_frequency
+
+        self._buzzer = GPIO.PWM(self._buzzer_pin, self._initial_frequency)
         self._buzzer.start(0)
 
     def _background_play(self, melody: Melody) -> None:
         for note in self._melodies[melody]:
+            if note.set_frequency is not None:
+                self._current_frequency = note.set_frequency
+                self._buzzer.ChangeFrequency(self._current_frequency)
+            elif self._current_frequency != self._initial_frequency:
+                self._current_frequency = self._initial_frequency
+                self._buzzer.ChangeFrequency(self._current_frequency)
             self._buzzer.ChangeDutyCycle(note.frequency)
             time.sleep(note.duration)
         self._buzzer.ChangeDutyCycle(0)
