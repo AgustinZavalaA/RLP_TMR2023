@@ -6,9 +6,6 @@ from abc import abstractmethod
 from typing import Type, Mapping
 
 from RLP_TMR2023.constants import hardware_pins
-# TODO: delete this test of multiple pwm
-from RLP_TMR2023.hardware_controllers.buzzer_controller import buzzer_controller_factory, Melody
-from RLP_TMR2023.hardware_controllers.singleton import Singleton
 
 logger = logging.getLogger(__name__)
 
@@ -147,13 +144,10 @@ def main() -> None:
     logging.basicConfig(level=logging.DEBUG)
     motors = motors_controller_factory(platform.machine())
     motors.setup()
-    buzzer = buzzer_controller_factory(platform.machine())
-    buzzer.setup()
     try:
         while True:
             motors.move(MotorSide.RIGHT, 100, MotorDirection.FORWARD)
             motors.move(MotorSide.LEFT, 100, MotorDirection.FORWARD)
-            buzzer.play(Melody.CAN_FOUND)
             time.sleep(1.2)
 
             motors.stop()
@@ -161,14 +155,12 @@ def main() -> None:
 
             motors.move(MotorSide.RIGHT, 100, MotorDirection.BACKWARD)
             motors.move(MotorSide.LEFT, 100, MotorDirection.BACKWARD)
-            buzzer.play(Melody.ABOUT_TO_COLLIDE)
             time.sleep(1.2)
 
             motors.stop()
             time.sleep(1)
     except KeyboardInterrupt:
         motors.disable()
-        buzzer.disable()
         logger.info("Program stopped by user")
 
 
