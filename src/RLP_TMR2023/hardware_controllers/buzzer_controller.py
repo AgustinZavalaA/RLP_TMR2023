@@ -202,9 +202,11 @@ def buzzer_controller_factory(architecture: str) -> BuzzerController:
     :return: the correct buzzer controller for the current platform
     """
     constructors: Mapping[str, Type[BuzzerController]] = {
-        "x86_64": BuzzerControllerMock,
-        "AMD64": BuzzerControllerMock,
-        "aarch64": BuzzerControllerRaspberry,
+        'x86_64': BuzzerControllerMock,
+        'aarch64': BuzzerControllerRaspberry,
+        'AMD64': BuzzerControllerMock,
+        'arm64': BuzzerControllerRaspberry,
+        'armv7l': BuzzerControllerRaspberry,
     }
     return constructors[architecture]()
 
