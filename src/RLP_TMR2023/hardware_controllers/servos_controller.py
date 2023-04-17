@@ -146,7 +146,7 @@ class ServosControllerRaspberry(ServosController):
         if not bypass_check and self._servos_status[servo_pair] == status:
             return
         s1, s2 = self._get_servos(servo_pair)
-        angle_1 = self._servos_values[servo_pair][self._servos_status[servo_pair]]
+        angle_1 = self._servos_values[servo_pair][status]
         angle_2 = 180 - angle_1
         t1 = threading.Thread(target=self._move_servo, args=(s1, angle_1))
         t2 = threading.Thread(target=self._move_servo, args=(s2, angle_2))
