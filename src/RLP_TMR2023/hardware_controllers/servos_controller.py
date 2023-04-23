@@ -6,10 +6,15 @@ import time
 from abc import abstractmethod
 from typing import Type, Mapping
 
-import busio
 from adafruit_motor import servo
-from adafruit_pca9685 import PCA9685
-from board import SCL, SDA
+
+try:
+    import busio
+    from adafruit_pca9685 import PCA9685
+    from board import SCL, SDA
+except ImportError:
+    logger = logging.getLogger(__name__)
+    logger.warning("Adafruit libraries not installed. Servos will not work")
 
 from RLP_TMR2023.constants import servos_values
 from RLP_TMR2023.hardware_controllers.singleton import Singleton
