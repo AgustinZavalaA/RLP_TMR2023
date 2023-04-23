@@ -174,7 +174,8 @@ class BuzzerControllerMock(BuzzerController):
 class BuzzerControllerRaspberry(BuzzerController):
     def setup(self) -> None:
         self._buzzer_pin = 38
-        GPIO.setmode(GPIO.BOARD)
+        if not GPIO.getmode():
+            GPIO.setmode(GPIO.BOARD)
         GPIO.setup(self._buzzer_pin, GPIO.OUT)
 
         self._initial_frequency = 2000
