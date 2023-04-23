@@ -118,7 +118,7 @@ class BuzzerController(metaclass=Singleton):
                 Note(0,0.2),
             ],
             Melody.HIGHAF: [
-            Note(80,3)
+            Note(80,2)
             ]
         }
 
