@@ -53,13 +53,15 @@ class DistanceSensorsControllerMock(DistanceSensorsController):
     def __init__(self):
         super().__init__()
         logger.info("Instantiating Singleton DistanceSensorsControllerMock")
+        self._mock_index = 0
 
     def setup(self) -> None:
         logger.info("DistanceSensorsControllerMock.setup() called")
 
     def is_about_to_collide(self, strategy: Callable[[tuple[int, int, int], int], bool]) -> bool:
         logger.info("Sensing distance")
-        return False
+        self._mock_index += 1
+        return self._mock_index % 50 == 0
 
     def disable(self) -> None:
         logger.info("DistanceSensorsControllerMock.disable() called")
