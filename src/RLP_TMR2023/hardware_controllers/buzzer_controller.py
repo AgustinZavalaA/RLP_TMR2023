@@ -37,6 +37,7 @@ class Melody(enum.Enum):
     MIAUMIAUMIAU = enum.auto()
     AXOLOTE_EATING = enum.auto()
     KNOCK_THE_DOOR = enum.auto()
+    HIGHAF = enum.auto()
 
 
 class BuzzerController(metaclass=Singleton):
@@ -115,6 +116,9 @@ class BuzzerController(metaclass=Singleton):
                 Note(0,0.2),
                 Note(20,0.1,1000),
                 Note(0,0.2),
+            ],
+            Melody.HIGHAF: [
+            Note(80,4)
             ]
         }
 
