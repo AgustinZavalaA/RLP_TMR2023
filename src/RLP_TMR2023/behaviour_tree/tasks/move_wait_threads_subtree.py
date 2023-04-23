@@ -1,5 +1,6 @@
 import enum
 import logging
+import platform
 import threading
 import time
 from dataclasses import dataclass
@@ -7,6 +8,9 @@ from typing import Optional
 
 import py_trees.behaviour
 from py_trees import common
+
+from RLP_TMR2023.hardware_controllers.motors_controller import motors_controller_factory, MotorSide, MotorDirection, \
+    MotorsControllers
 
 logger = logging.getLogger(__name__)
 
@@ -26,10 +30,18 @@ class MotorInstruction:
     time: float
 
 
-def execute_motor_instructions(motor_instructions: list[MotorInstruction]) -> None:
+def execute_motor_instructions(motors: MotorsControllers, motor_instructions: list[MotorInstruction]) -> None:
+    motors_directions = {
+        MotorMovement.FORWARD: [MotorDirection.FORWARD, MotorDirection.FORWARD],
+        MotorMovement.BACKWARD: [MotorDirection.BACKWARD, MotorDirection.BACKWARD],
+        MotorMovement.LEFT: [MotorDirection.BACKWARD, MotorDirection.FORWARD],
+        MotorMovement.RIGHT: [MotorDirection.FORWARD, MotorDirection.BACKWARD],
+        MotorMovement.STOP: [MotorDirection.FORWARD, MotorDirection.FORWARD],
+    }
     for instruction in motor_instructions:
-        logger.info(
-            f"Moving {instruction.motor_movement.name} for {instruction.time} seconds at {instruction.speed} speed")
+        left_direction, right_direction = motors_directions[instruction.motor_movement]
+        motors.move(MotorSide.LEFT, instruction.speed, left_direction)
+        motors.move(MotorSide.RIGHT, instruction.speed, right_direction)
         time.sleep(instruction.time)
 
 
@@ -37,6 +49,7 @@ class ExecuteMotorInstructionsClass:
     def __init__(self, motor_instructions: list[MotorInstruction]) -> None:
         self._motor_instructions = motor_instructions
         self._motor_instructions_thread: Optional[threading.Thread] = None
+        self._motors = motors_controller_factory(platform.machine())
 
     def update(self) -> None:
         if self._motor_instructions_thread is not None:
@@ -44,7 +57,7 @@ class ExecuteMotorInstructionsClass:
                 self._motor_instructions_thread = None
         else:
             self._motor_instructions_thread = threading.Thread(target=execute_motor_instructions,
-                                                               args=(self._motor_instructions,),
+                                                               args=(self._motors, self._motor_instructions),
                                                                daemon=True)
             self._motor_instructions_thread.start()
 
@@ -54,6 +67,7 @@ class ExecuteMotorInstructions(py_trees.behaviour.Behaviour):
         super().__init__(name)
         self._motor_instructions = motor_instructions
         self._motor_instructions_thread = None
+        self._motors = motors_controller_factory(platform.machine())
 
     def update(self) -> common.Status:
         if self._motor_instructions_thread:
@@ -62,7 +76,7 @@ class ExecuteMotorInstructions(py_trees.behaviour.Behaviour):
                 return common.Status.SUCCESS
         else:
             self._motor_instructions_thread = threading.Thread(target=execute_motor_instructions,
-                                                               args=(self._motor_instructions,),
+                                                               args=(self._motors, self._motor_instructions),
                                                                daemon=True)  # type: ignore
             self._motor_instructions_thread.start()  # type: ignore
         return common.Status.RUNNING
