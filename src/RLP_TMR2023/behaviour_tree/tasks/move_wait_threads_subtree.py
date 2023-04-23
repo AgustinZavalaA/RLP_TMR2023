@@ -3,6 +3,7 @@ import logging
 import threading
 import time
 from dataclasses import dataclass
+from typing import Optional
 
 import py_trees.behaviour
 from py_trees import common
@@ -35,7 +36,7 @@ def execute_motor_instructions(motor_instructions: list[MotorInstruction]) -> No
 class ExecuteMotorInstructionsClass:
     def __init__(self, motor_instructions: list[MotorInstruction]) -> None:
         self._motor_instructions = motor_instructions
-        self._motor_instructions_thread = None
+        self._motor_instructions_thread: Optional[threading.Thread] = None
 
     def update(self) -> None:
         if self._motor_instructions_thread is not None:
@@ -55,15 +56,15 @@ class ExecuteMotorInstructions(py_trees.behaviour.Behaviour):
         self._motor_instructions_thread = None
 
     def update(self) -> common.Status:
-        if self._motor_instructions_thread is not None:
-            if not self._motor_instructions_thread.is_alive():
+        if self._motor_instructions_thread:
+            if not self._motor_instructions_thread.is_alive():  # type: ignore
                 self._motor_instructions_thread = None
                 return common.Status.SUCCESS
         else:
             self._motor_instructions_thread = threading.Thread(target=execute_motor_instructions,
                                                                args=(self._motor_instructions,),
-                                                               daemon=True)
-            self._motor_instructions_thread.start()
+                                                               daemon=True)  # type: ignore
+            self._motor_instructions_thread.start()  # type: ignore
         return common.Status.RUNNING
 
 
