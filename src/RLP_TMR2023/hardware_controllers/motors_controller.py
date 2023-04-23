@@ -80,7 +80,8 @@ class MotorsControllerRaspberry(MotorsControllers):
         self.pwm_motor_2: GPIO.PWM = None
 
     def setup(self) -> None:
-        GPIO.setmode(GPIO.BOARD)
+        if not GPIO.getmode():
+            GPIO.setmode(GPIO.BOARD)
 
         # Set all the motor direction pins as output
         for pin in self._pin_dir_motor_1_input + self.pin_dir_motor_2_input:
