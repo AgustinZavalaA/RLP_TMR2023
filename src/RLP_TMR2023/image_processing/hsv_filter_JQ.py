@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import cv2
 import numpy as np
 import numpy.typing as npt
@@ -41,9 +43,22 @@ def adaptative_gaussian(image: npt.NDArray[np.uint8]) -> npt.NDArray[np.uint8]:
 
 def otsu(image: npt.NDArray[np.uint8]) -> npt.NDArray[np.uint8]:
     img_grey = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    otsu_filtered = cv2.threshold(img_grey, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
+    gaussian_blur = cv2.GaussianBlur(img_grey, (5, 5), 0)
+    otsu_filtered = cv2.threshold(gaussian_blur, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
 
     return otsu_filtered
+
+
+def calculate_centroid(image: npt.NDArray[np.uint8]) -> Tuple[int, int]:
+    img_grey = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    ret, thresh = cv2.threshold(img_grey, 127, 255, 0)
+    contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    cnt = contours[0]
+    M = cv2.moments(cnt)
+
+    cx = int(M['m10'] / M['m00'])
+    cy = int(M['m01'] / M['m00'])
+    return cx, cy
 
 
 def main():
@@ -65,8 +80,8 @@ def main():
         _, img = camera.read()
         img = cv2.flip(img, 1)
 
-        # img = cv2.imread("/home/yisus/Documents/Codes/Python/RLP_TMR2023/src/RLP_TMR2023/temp_can_directory/black_can"
-        # ".jpeg")
+        img = cv2.imread("/home/yisus/Documents/Codes/Python/RLP_TMR2023/src/RLP_TMR2023/temp_can_directory/black_can"
+                         ".jpeg")
         # print(img.shape)
         # img = cv2.imread("/home/pi/RLP_TMR2023/temp_can_directory/black_can.jpg")
 
@@ -89,11 +104,15 @@ def main():
 
         otsu_image = otsu(img)
 
+        centroid_image = calculate_centroid(img)
+
         cv2.imshow("Adaptative mean", adaptative_mean_image)
 
         cv2.imshow("Adaptative gaussian", adaptative_gaussian_image)
 
         cv2.imshow("Otsu Binarization", otsu_image)
+
+        cv2.imshow("Centroid", centroid_image)
 
         res1 = cv2.bitwise_and(img, img, mask=red)
 
