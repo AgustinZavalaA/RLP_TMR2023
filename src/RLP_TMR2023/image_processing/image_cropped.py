@@ -2,19 +2,18 @@ import cv2
 import numpy as np
 import numpy.typing as npt
 
-from blue_filter import blue_filter
+from RLP_TMR2023.image_processing.image_filter import blue_filter
 
 
-def trimmer_image(image: npt.NDArray[np.uint8], percentage: int) -> npt.NDArray[np.uint8]:
+def trimmer_image(image: npt.NDArray[np.uint8], percentage_trimmed: int) -> npt.NDArray[np.uint8]:
     """
     Cut the image to only show the blue part
 
     """
-    percentage_crop = int(percentage * 480 / 100)
-    print(percentage_crop)
+    percentage_crop = int(percentage_trimmed * 480 / 100)
     blue_image = blue_filter(image)
     cropped_image = blue_image[percentage_crop:480, 0:640]
-    return cropped_image
+    return cropped_image  # type: ignore
 
 
 def main():
