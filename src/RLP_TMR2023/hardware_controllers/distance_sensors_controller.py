@@ -81,11 +81,15 @@ class DistanceSensorsControllerRaspberry(DistanceSensorsController):
             raise RuntimeError("The distance sensors controller has not been setup yet")
         # read the first 3 bytes that are not 255
         sensor_data_list: list[int] = []
-        while len(sensor_data_list) < 3:
-            data = self._i2c_bus.read_byte_data(self._addr, 0)
+        try:
+            while len(sensor_data_list) < 3:
+                data = self._i2c_bus.read_byte_data(self._addr, 0)
             if data != 255:
                 sensor_data_list.append(data)
-        sensor_data = (sensor_data_list[0], sensor_data_list[1], sensor_data_list[2])  # just for type hinting
+            sensor_data = (sensor_data_list[0], sensor_data_list[1], sensor_data_list[2])  # just for type hinting
+            last_sensor_data = sensor_data
+        except:
+            sensor_data = last_sensor_data
         logger.info(f"Sensor data: {sensor_data}")
         return strategy(sensor_data, self._max_distance)
 
@@ -116,10 +120,9 @@ def main():
         while True:
             print(distance_sensors.is_about_to_collide(any_sensor_strategy))
             time.sleep(.2)
-    except:
+    except KeyboardInterrupt:
         distance_sensors.disable()
-        logger.info("Restarting")
-        main()
+        logger.info("Program stopped by user.")
 
 
 if __name__ == '__main__':
