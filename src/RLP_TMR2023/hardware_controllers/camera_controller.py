@@ -7,7 +7,11 @@ from typing import Optional, Mapping, Type
 import cv2
 import numpy as np
 import numpy.typing as npt
-from picamera2 import Picamera2
+
+try:
+    from picamera2 import Picamera2
+except ImportError:
+    Picamera2 = None
 from tflite_support.task import core
 from tflite_support.task import processor
 from tflite_support.task import vision
