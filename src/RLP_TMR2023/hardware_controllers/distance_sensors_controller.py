@@ -81,6 +81,7 @@ class DistanceSensorsControllerRaspberry(DistanceSensorsController):
             raise RuntimeError("The distance sensors controller has not been setup yet")
         # read the first 3 bytes that are not 255
         sensor_data_list: list[int] = []
+        print("Test2")
         while len(sensor_data_list) < 3:
             try:
                 data = self._i2c_bus.read_byte_data(self._addr, 0)
