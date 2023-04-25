@@ -115,7 +115,7 @@ def main():
     try:
         while True:
             print(distance_sensors.is_about_to_collide(any_sensor_strategy))
-            time.sleep(1)
+            time.sleep(.2)
     except:
         distance_sensors.disable()
         logger.info("Restarting")
