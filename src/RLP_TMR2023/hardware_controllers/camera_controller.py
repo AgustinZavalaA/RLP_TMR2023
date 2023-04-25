@@ -116,6 +116,7 @@ class CameraControllerRaspberry(CameraController):
         self._picamera.configure("preview")  # TODO: titulo de la ventana: probablemente no se ocupe dado
         # que no se mostrara el feed de la camara
         self._picamera.start()
+        super().setup()
 
     def get_current_frame(self) -> Optional[npt.NDArray[np.uint8]]:
         if self._picamera is None:
