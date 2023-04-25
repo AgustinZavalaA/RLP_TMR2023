@@ -7,6 +7,11 @@ from typing import Optional, Mapping, Type
 import cv2
 import numpy as np
 import numpy.typing as npt
+
+try:
+    from picamera2 import Picamera2
+except ImportError:
+    Picamera2 = None
 from tflite_support.task import core
 from tflite_support.task import processor
 from tflite_support.task import vision
@@ -26,24 +31,15 @@ def get_default_model() -> str:
 
 class CameraController(metaclass=Singleton):
     def __init__(self) -> None:
-        self._cap: Optional[cv2.VideoCapture] = None
         self._camera_width: Optional[int] = None
         self._camera_height: Optional[int] = None
         self._model = get_default_model()
-        self._camera_id = object_detection_values.CAMERA_ID
         self._number_threads = object_detection_values.NUMBER_THREADS
         self._enable_edgetpu = object_detection_values.ENABLE_EDGETPU
-        self._is_mock = False
 
         self.detector: Optional[vision.ObjectDetector] = None
 
     def setup(self) -> None:
-        # Start capturing video input from the camera
-        self._cap = cv2.VideoCapture(self._camera_id)
-        print(type(self._cap))
-        self._cap.set(cv2.CAP_PROP_FRAME_WIDTH, self._camera_width)
-        self._cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self._camera_height)
-
         # Initialize the object detection model
         base_options = core.BaseOptions(
             file_name=self._model, use_coral=self._enable_edgetpu, num_threads=self._number_threads)
@@ -54,32 +50,13 @@ class CameraController(metaclass=Singleton):
         self.detector = vision.ObjectDetector.create_from_options(options)
         print(type(self.detector))
 
+    @abstractmethod
     def get_current_frame(self) -> Optional[npt.NDArray[np.uint8]]:
-        if self._cap is None:
-            logger.error("CameraController is not initialized")
-            return None
-        success, image = self._cap.read()
-        if not success:
-            logger.error("Failed to read image from camera")
-            return None
-
-        image = cv2.flip(image, 1)
-        if self._is_mock:
-            cv2.imshow('current frame', image)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                raise KeyboardInterrupt
-        # Convert the image from BGR to RGB as required by the TFLite model.
-        rgb_image: npt.NDArray[np.uint8] = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        return rgb_image
+        pass
 
     @abstractmethod
     def disable(self) -> None:
-        if self._cap is not None:
-            self._cap.release()
         cv2.destroyAllWindows()
-
-    def show_image(self) -> None:
-        pass
 
 
 class CameraControllerMock(CameraController):
@@ -91,14 +68,39 @@ class CameraControllerMock(CameraController):
         super().__init__()
         self._camera_width = object_detection_values.CAMERA_WIDTH_MOCK
         self._camera_height = object_detection_values.CAMERA_HEIGHT_MOCK
+
+        self._cap: Optional[cv2.VideoCapture] = None
+        self._camera_id = object_detection_values.CAMERA_ID
         logger.info("Instantiating Singleton CameraControllerMock")
 
     def setup(self) -> None:
         logger.info("CameraControllerMock.setup() called")
-        self._is_mock = True
+        # Start capturing video input from the camera
+        self._cap = cv2.VideoCapture(self._camera_id)
+        self._cap.set(cv2.CAP_PROP_FRAME_WIDTH, self._camera_width)
+        self._cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self._camera_height)
         super().setup()
 
+    def get_current_frame(self) -> Optional[npt.NDArray[np.uint8]]:
+        if self._cap is None:
+            logger.error("CameraController is not initialized")
+            return None
+        success, image = self._cap.read()
+        if not success:
+            logger.error("Failed to read image from camera")
+            return None
+
+        image = cv2.flip(image, 1)
+        cv2.imshow('current frame', image)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            raise KeyboardInterrupt
+        # Convert the image from BGR to RGB as required by the TFLite model.
+        rgb_image: npt.NDArray[np.uint8] = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        return rgb_image
+
     def disable(self) -> None:
+        if self._cap is not None:
+            self._cap.release()
         logger.info("Disabling camera")
         super().disable()
 
@@ -108,6 +110,24 @@ class CameraControllerRaspberry(CameraController):
         super().__init__()
         self._camera_width = object_detection_values.CAMERA_WIDTH_MOCK
         self._camera_height = object_detection_values.CAMERA_HEIGHT_MOCK
+        self._picamera = None
+
+    def setup(self) -> None:
+        self._picamera = Picamera2()
+        self._picamera.preview_configuration.main.size = (self._camera_width, self._camera_height)
+        self._picamera.preview_configuration.main.format = "RGB888"
+        self._picamera.preview_configuration.main.align()
+        self._picamera.configure("preview")  # TODO: titulo de la ventana: probablemente no se ocupe dado
+        # que no se mostrara el feed de la camara
+        self._picamera.start()
+        super().setup()
+
+    def get_current_frame(self) -> Optional[npt.NDArray[np.uint8]]:
+        if self._picamera is None:
+            logger.error("PiCamera not found (Maybe call setup() first)")
+            return None
+        image: npt.NDArray[np.uint8] = self._picamera.capture_array()
+        return image
 
     def disable(self) -> None:
         logger.info("Disabling camera")
