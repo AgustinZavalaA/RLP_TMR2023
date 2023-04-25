@@ -118,6 +118,7 @@ def main():
     distance_sensors.setup()
     try:
         while True:
+            print("test")
             print(distance_sensors.is_about_to_collide(any_sensor_strategy))
             time.sleep(.2)
     except KeyboardInterrupt:
