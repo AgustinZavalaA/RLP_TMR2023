@@ -1,30 +1,11 @@
-from dataclasses import dataclass
 from typing import Callable
 
 import cv2
 import numpy as np
 import numpy.typing as npt
 
+from RLP_TMR2023.common_types.common_types import BoundingBox, Detection
 from image_filtering import otsu_filtering
-
-
-@dataclass
-class BoundingBox:
-    """
-    Bounding box of an object detected by the model
-    All coordinates are relative to the center of the image
-    """
-    x: float
-    y: float
-    width: float
-    height: float
-
-
-@dataclass
-class Detection:
-    category: str
-    score: float
-    bounding_box: BoundingBox
 
 
 def draw_br_and_centroid(filtered_image: npt.NDArray[np.uint8], out) -> list[tuple[Detection, tuple[int, int]]]:

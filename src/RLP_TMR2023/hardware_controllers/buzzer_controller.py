@@ -5,7 +5,12 @@ import threading
 import time
 from abc import abstractmethod
 from dataclasses import dataclass
-from typing import Type, Mapping
+from typing import Type, Mapping, Optional
+
+try:
+    import RPi.GPIO as GPIO
+except ImportError:
+    logging.getLogger(__name__).warning("RPi.GPIO not found, using mock buzzer controller")
 
 from RLP_TMR2023.hardware_controllers.singleton import Singleton
 
@@ -19,6 +24,7 @@ class Note:
     """
     frequency: int
     duration: float
+    set_frequency: Optional[int] = None
 
 
 class Melody(enum.Enum):
@@ -27,6 +33,11 @@ class Melody(enum.Enum):
     """
     CAN_FOUND = enum.auto()
     ABOUT_TO_COLLIDE = enum.auto()
+    STEPROBOT_IS_STUCK = enum.auto()
+    MIAUMIAUMIAU = enum.auto()
+    AXOLOTE_EATING = enum.auto()
+    KNOCK_THE_DOOR = enum.auto()
+    HIGHAF = enum.auto()
 
 
 class BuzzerController(metaclass=Singleton):
@@ -34,12 +45,80 @@ class BuzzerController(metaclass=Singleton):
         super().__init__()
         self._melodies: dict[Melody, list[Note]] = {
             Melody.CAN_FOUND: [
-                Note(262, 0.5),
-                Note(294, 0.5),
+                Note(30, 0.1),
+                Note(0, 0.1),
+                Note(70, 0.1),
+                Note(80, 0.1),
+                Note(90, 0.2),
             ],
             Melody.ABOUT_TO_COLLIDE: [
-                Note(50, 0.5),
-                Note(12, 0.5),
+                Note(10, 0.07),
+                Note(0, 0.07),
+                Note(10, 0.07),
+                Note(0, 0.07),
+                Note(10, 0.07),
+                Note(0, 0.07),
+                Note(10, 0.07),
+                Note(0, 0.07),
+                Note(10, 0.07),
+                Note(0, 0.07),
+                Note(10, 0.07),
+                Note(0, 0.07),
+                Note(10, 0.07),
+                Note(0, 0.07),
+                Note(10, 0.07),
+                Note(0, 0.07),
+                Note(10, 0.07),
+                Note(0, 0.07),
+            ],
+            Melody.STEPROBOT_IS_STUCK: [
+                Note(99, 0.2),
+                Note(0, 0.2),
+                Note(99, 0.2),
+                Note(0, 0.2),
+                Note(99, 0.2),
+                Note(0, 0.2),
+                Note(99, 0.2),
+                Note(0, 0.2),
+                Note(99, 0.2),
+                Note(0, 0.2),
+                Note(99, 0.2),
+                Note(0, 0.2),
+            ],
+            Melody.MIAUMIAUMIAU: [
+                Note(1, 0.5),
+                Note(0, 0.5),
+                Note(10, 0.5),
+                Note(0, 0.5),
+                Note(20, 0.5),
+                Note(0, 0.5),
+            ],
+            Melody.AXOLOTE_EATING: [
+                Note(20, 0.3, 700),
+                Note(0, 0.1, ),
+                Note(40, 0.2, 700),
+                Note(0, 0.1, ),
+                Note(20, 0.4, 700),
+                Note(0, 0.1, ),
+            ],
+            Melody.KNOCK_THE_DOOR: [
+                Note(20, 0.1, 1000),
+                Note(0, 0.2),
+                Note(40, 0.1, 1000),
+                Note(0, 0.1),
+                Note(20, 0.1, 1000),
+                Note(0, 0.1),
+                Note(20, 0.1, 1000),
+                Note(0, 0.3),
+                Note(20, 0.1, 1000),
+                Note(0, 0.7),
+                Note(20, 0.1, 1000),
+                Note(0, 0.2),
+                Note(20, 0.1, 1000),
+                Note(0, 0.2),
+            ],
+            Melody.HIGHAF: [
+                Note(80, 2)
             ]
         }
 
@@ -92,8 +171,35 @@ class BuzzerControllerMock(BuzzerController):
         logger.info("Disabling buzzer")
 
 
-# TODO: add a buzzer controller for the raspberry pi
-# class BuzzerControllerRaspberry(BuzzerController):
+class BuzzerControllerRaspberry(BuzzerController):
+    def setup(self) -> None:
+        self._buzzer_pin = 38
+        if not GPIO.getmode():
+            GPIO.setmode(GPIO.BOARD)
+        GPIO.setup(self._buzzer_pin, GPIO.OUT)
+
+        self._initial_frequency = 2000
+        self._current_frequency = self._initial_frequency
+
+        self._buzzer = GPIO.PWM(self._buzzer_pin, self._initial_frequency)
+        self._buzzer.start(0)
+
+    def _background_play(self, melody: Melody) -> None:
+        for note in self._melodies[melody]:
+            if note.set_frequency is not None:
+                self._current_frequency = note.set_frequency
+                self._buzzer.ChangeFrequency(self._current_frequency)
+            elif self._current_frequency != self._initial_frequency:
+                self._current_frequency = self._initial_frequency
+                self._buzzer.ChangeFrequency(self._current_frequency)
+            self._buzzer.ChangeDutyCycle(note.frequency)
+            time.sleep(note.duration)
+        self._buzzer.ChangeDutyCycle(0)
+
+    def disable(self) -> None:
+        self._buzzer.stop()
+        GPIO.cleanup()
+
 
 def buzzer_controller_factory(architecture: str) -> BuzzerController:
     """
@@ -101,9 +207,11 @@ def buzzer_controller_factory(architecture: str) -> BuzzerController:
     :return: the correct buzzer controller for the current platform
     """
     constructors: Mapping[str, Type[BuzzerController]] = {
-        "x86_64": BuzzerControllerMock,
-        "AMD64": BuzzerControllerMock,
-        # TODO: add the raspberry pi constructor
+        'x86_64': BuzzerControllerMock,
+        'aarch64': BuzzerControllerRaspberry,
+        'AMD64': BuzzerControllerMock,
+        'arm64': BuzzerControllerRaspberry,
+        'armv7l': BuzzerControllerRaspberry,
     }
     return constructors[architecture]()
 
@@ -112,11 +220,16 @@ def main():
     logging.basicConfig(level=logging.INFO)
     buzzer_controller = buzzer_controller_factory(platform.machine())
     buzzer_controller.setup()
-    buzzer_controller.play(Melody.CAN_FOUND)
-    time.sleep(0.5)
-    buzzer_controller.play(Melody.ABOUT_TO_COLLIDE)
-    time.sleep(2)
-    buzzer_controller.disable()
+
+    try:
+        while True:
+            print("Select a melody to play:")
+            for i, melody in enumerate(Melody, 1):
+                print(f"{i} -> {melody.name}")
+            melody = Melody(int(input()))
+            buzzer_controller.play(melody)
+    except KeyboardInterrupt:
+        buzzer_controller.disable()
 
 
 if __name__ == "__main__":

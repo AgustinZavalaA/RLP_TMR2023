@@ -2,7 +2,8 @@ import cv2
 import numpy as np
 import numpy.typing as npt
 
-from image_filtering import hsv_filter
+from RLP_TMR2023.constants.color_filters import BLUE_LOWER_HSV, BLUE_UPPER_HSV
+from RLP_TMR2023.image_processing.image_filtering import hsv_filter
 
 
 def blue_filter(image: npt.NDArray[np.uint8]) -> npt.NDArray[np.uint8]:
@@ -15,10 +16,10 @@ def blue_filter(image: npt.NDArray[np.uint8]) -> npt.NDArray[np.uint8]:
 
     # lower = np.array([0, 20, 0])
     # upper = np.array([50, 255, 255])
-    lower = np.array([69, 37, 0])
-    upper = np.array([134, 255, 255])
+    lower = np.array(BLUE_LOWER_HSV)
+    upper = np.array(BLUE_UPPER_HSV)
 
-    return hsv_filter(image, lower, upper, 5)
+    return hsv_filter(image, lower, upper, 5)  # type: ignore
 
 
 def main():
