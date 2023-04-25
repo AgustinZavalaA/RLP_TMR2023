@@ -1,5 +1,3 @@
-from typing import Tuple
-
 import cv2
 import numpy as np
 import numpy.typing as npt
@@ -26,45 +24,36 @@ def hsv_filter(image: npt.NDArray[np.uint8], lower: npt.NDArray[np.uint8], upper
     return dilated_filtered
 
 
-def adapative_mean(image: npt.NDArray[np.uint8]) -> npt.NDArray[np.uint8]:
+def adaptive_mean(image: npt.NDArray[np.uint8]) -> npt.NDArray[np.uint8]:
     img_grey = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     mean_filtered = cv2.adaptiveThreshold(img_grey, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
 
-    return mean_filtered
+    return mean_filtered  # type: ignore
 
 
-def adaptative_gaussian(image: npt.NDArray[np.uint8]) -> npt.NDArray[np.uint8]:
+def adaptive_gaussian(image: npt.NDArray[np.uint8]) -> npt.NDArray[np.uint8]:
     img_grey = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     gaussian_filtered = cv2.adaptiveThreshold(img_grey, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY,
                                               11, 2)
 
-    return gaussian_filtered
+    return gaussian_filtered  # type: ignore
 
 
-def otsu(image: npt.NDArray[np.uint8]) -> npt.NDArray[np.uint8]:
+def otsu_filtering(image: npt.NDArray[np.uint8]) -> npt.NDArray[np.uint8]:
     img_grey = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     gaussian_blur = cv2.GaussianBlur(img_grey, (5, 5), 0)
     otsu_filtered = cv2.threshold(gaussian_blur, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
 
-    return otsu_filtered
+    return otsu_filtered  # type: ignore
 
 
-def calculate_centroid(image: npt.NDArray[np.uint8]) -> Tuple[int, int]:
-    img_grey = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    ret, thresh = cv2.threshold(img_grey, 127, 255, 0)
-    contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    cnt = contours[0]
-    M = cv2.moments(cnt)
-
-    cx = int(M['m10'] / M['m00'])
-    cy = int(M['m01'] / M['m00'])
-    return cx, cy
+def nothing(x):
+    # flake8 complains if this function is empty or if it is a lambda
+    pass
 
 
 def main():
     camera = cv2.VideoCapture(0)
-
-    nothing = lambda x: None
 
     cv2.namedWindow('marking')
 
@@ -80,11 +69,6 @@ def main():
         _, img = camera.read()
         img = cv2.flip(img, 1)
 
-        img = cv2.imread("/home/yisus/Documents/Codes/Python/RLP_TMR2023/src/RLP_TMR2023/temp_can_directory/black_can"
-                         ".jpeg")
-        # print(img.shape)
-        # img = cv2.imread("/home/pi/RLP_TMR2023/temp_can_directory/black_can.jpg")
-
         h_l = cv2.getTrackbarPos('H Lower', 'marking')
         h_h = cv2.getTrackbarPos('H Higher', 'marking')
         s_l = cv2.getTrackbarPos('S Lower', 'marking')
@@ -98,21 +82,17 @@ def main():
 
         red = hsv_filter(img, lower_region, upper_region, kernel_size)
 
-        adaptative_mean_image = adapative_mean(img)
+        adaptive_mean_image = adaptive_mean(img)
 
-        adaptative_gaussian_image = adaptative_gaussian(img)
+        adaptive_gaussian_image = adaptive_gaussian(img)
 
-        otsu_image = otsu(img)
+        otsu_image = otsu_filtering(img)
 
-        centroid_image = calculate_centroid(img)
+        cv2.imshow("Adaptively mean", adaptive_mean_image)
 
-        cv2.imshow("Adaptative mean", adaptative_mean_image)
-
-        cv2.imshow("Adaptative gaussian", adaptative_gaussian_image)
+        cv2.imshow("Adaptively gaussian", adaptive_gaussian_image)
 
         cv2.imshow("Otsu Binarization", otsu_image)
-
-        cv2.imshow("Centroid", centroid_image)
 
         res1 = cv2.bitwise_and(img, img, mask=red)
 
