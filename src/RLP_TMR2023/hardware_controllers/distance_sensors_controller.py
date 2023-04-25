@@ -89,7 +89,7 @@ class DistanceSensorsControllerRaspberry(DistanceSensorsController):
             sensor_data = (sensor_data_list[0], sensor_data_list[1], sensor_data_list[2])  # just for type hinting
             last_sensor_data = sensor_data
         except:
-            sensor_data = last_sensor_data
+            sensor_data = (254,254,254)
         logger.info(f"Sensor data: {sensor_data}")
         return strategy(sensor_data, self._max_distance)
 
