@@ -115,7 +115,7 @@ def main():
     try:
         while True:
             print(distance_sensors.is_about_to_collide(any_sensor_strategy))
-            time.sleep(0.5)
+            time.sleep(1)
     except KeyboardInterrupt:
         distance_sensors.disable()
         logger.info("Exiting program")
