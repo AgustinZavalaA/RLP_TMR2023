@@ -85,7 +85,7 @@ class DistanceSensorsControllerRaspberry(DistanceSensorsController):
         while len(sensor_data_list) < 3:
             try:
                 data = self._i2c_bus.read_byte_data(self._addr, 0)
-                self.last_data = 0
+                self.last_data = data
             except:
                 data = self.last_data
             if data != 255:
