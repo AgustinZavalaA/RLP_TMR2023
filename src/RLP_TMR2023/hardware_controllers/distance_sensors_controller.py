@@ -88,8 +88,8 @@ class DistanceSensorsControllerRaspberry(DistanceSensorsController):
                 data = 254
             if data != 255:
                 sensor_data_list.append(data)
-            sensor_data = (sensor_data_list[0], sensor_data_list[1], sensor_data_list[2])  # just for type hinting
-            logger.info(f"Sensor data: {sensor_data}")
+        sensor_data = (sensor_data_list[0], sensor_data_list[1], sensor_data_list[2])  # just for type hinting
+        logger.info(f"Sensor data: {sensor_data}")
         return strategy(sensor_data, self._max_distance)
 
     def disable(self) -> None:
