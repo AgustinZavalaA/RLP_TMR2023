@@ -71,11 +71,11 @@ class DistanceSensorsControllerRaspberry(DistanceSensorsController):
         self._i2c_bus = None
         self._addr = None
         self._max_distance = ultrasonic_values.MAX_DISTANCE
+        self.last_data = 0
 
     def setup(self) -> None:
         self._addr = ultrasonic_values.I2C_ADDR
         self._i2c_bus = smbus.SMBus(ultrasonic_values.I2C_BUS)
-        self.last_data = 0
 
     def is_about_to_collide(self, strategy: Callable[[tuple[int, int, int], int], bool]) -> bool:
         if self._i2c_bus is None:
@@ -86,12 +86,11 @@ class DistanceSensorsControllerRaspberry(DistanceSensorsController):
             try:
                 data = self._i2c_bus.read_byte_data(self._addr, 0)
                 self.last_data = data
-            except:
+            except OSError:
                 data = self.last_data
             if data != 255:
                 sensor_data_list.append(data)
         sensor_data = (sensor_data_list[0], sensor_data_list[1], sensor_data_list[2])  # just for type hinting
-        logger.info(f"Sensor data: {sensor_data}")
         return strategy(sensor_data, self._max_distance)
 
     def disable(self) -> None:
