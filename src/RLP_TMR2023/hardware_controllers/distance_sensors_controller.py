@@ -94,7 +94,7 @@ class DistanceSensorsControllerRaspberry(DistanceSensorsController):
             if data != 255:
                 sensor_data_list.append(data)
         sensor_data = (sensor_data_list[0], sensor_data_list[1], sensor_data_list[2])  # just for type hinting
-        return strategy(sensor_data, self._max_distance)
+        return strategy(sensor_data, self._min_distance, self._max_distance)
 
     def disable(self) -> None:
         """ This method is used to disable the distance sensors
