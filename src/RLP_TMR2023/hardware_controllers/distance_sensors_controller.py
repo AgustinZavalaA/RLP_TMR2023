@@ -9,6 +9,7 @@ from typing import Type, Mapping, Callable
 
 import smbus
 
+from RLP_TMR2023.constants import ultrasonic_values
 from RLP_TMR2023.hardware_controllers.singleton import Singleton
 
 logger = logging.getLogger(__name__)
@@ -52,13 +53,15 @@ class DistanceSensorsControllerMock(DistanceSensorsController):
     def __init__(self):
         super().__init__()
         logger.info("Instantiating Singleton DistanceSensorsControllerMock")
+        self._mock_index = 0
 
     def setup(self) -> None:
         logger.info("DistanceSensorsControllerMock.setup() called")
 
     def is_about_to_collide(self, strategy: Callable[[tuple[int, int, int], int], bool]) -> bool:
         logger.info("Sensing distance")
-        return False
+        self._mock_index += 1
+        return self._mock_index % 50 == 0
 
     def disable(self) -> None:
         logger.info("DistanceSensorsControllerMock.disable() called")
@@ -69,18 +72,32 @@ class DistanceSensorsControllerRaspberry(DistanceSensorsController):
         super().__init__()
         self._i2c_bus = None
         self._addr = None
-        self._max_distance = 20  # TODO: get the max distance from the config file
+        self._max_distance = ultrasonic_values.MAX_DISTANCE
+        self.last_data = 0
 
     def setup(self) -> None:
-        self._addr = 8  # TODO: get the address from the config file
-        self._i2c_bus = smbus.SMBus(self._addr)
+        self._addr = ultrasonic_values.I2C_ADDR
+        self._i2c_bus = smbus.SMBus(ultrasonic_values.I2C_BUS)
 
     def is_about_to_collide(self, strategy: Callable[[tuple[int, int, int], int], bool]) -> bool:
-        dist = smbus.read_byte(self._addr, force=None)
-        sensor_data = dist.split(' ', 2)
+        if self._i2c_bus is None:
+            raise RuntimeError("The distance sensors controller has not been setup yet")
+        # read the first 3 bytes that are not 255
+        sensor_data_list: list[int] = []
+        while len(sensor_data_list) < 3:
+            try:
+                data = self._i2c_bus.read_byte_data(self._addr, 0)
+                self.last_data = data
+            except OSError:
+                data = self.last_data
+            if data != 255:
+                sensor_data_list.append(data)
+        sensor_data = (sensor_data_list[0], sensor_data_list[1], sensor_data_list[2])  # just for type hinting
         return strategy(sensor_data, self._max_distance)
 
     def disable(self) -> None:
+        """ This method is used to disable the distance sensors
+        """
         pass
 
 
@@ -103,11 +120,11 @@ def main():
     distance_sensors.setup()
     try:
         while True:
-            print(distance_sensors.is_about_to_collide(all_sensors_strategy))
+            print(distance_sensors.is_about_to_collide(any_sensor_strategy))
             time.sleep(0.2)
     except KeyboardInterrupt:
         distance_sensors.disable()
-        logger.info("Exiting program")
+        logger.info("Program stopped by user.")
 
 
 if __name__ == '__main__':

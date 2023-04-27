@@ -66,10 +66,11 @@ def get_tasks_subtree() -> py_trees.behaviour.Behaviour:
 
 
 def create_root() -> py_trees.behaviour.Behaviour:
-    root = py_trees.composites.Parallel(name="Resilient CLaDOS BT",
-                                        policy=py_trees.common.ParallelPolicy.SuccessOnAll(
-                                            synchronise=True
-                                        ))
+    # root = py_trees.composites.Parallel(name="Resilient CLaDOS BT",
+    #                                     policy=py_trees.common.ParallelPolicy.SuccessOnAll(
+    #                                         synchronise=True
+    #                                     ))
+    root = py_trees.composites.Sequence(name="Resilient CLaDOS BT", memory=False)
     root.add_child(get_data_recollection_subtree())
 
     root.add_child(get_tasks_subtree())

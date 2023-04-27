@@ -1,31 +1,13 @@
 import logging
-from dataclasses import dataclass
 from typing import Optional
 
 import numpy as np
 import numpy.typing as npt
 from tflite_support.task import vision
 
+from RLP_TMR2023.common_types.common_types import Detection, BoundingBox
+
 logger = logging.getLogger(__name__)
-
-
-@dataclass
-class BoundingBox:
-    """
-    Bounding box of an object detected by the model
-    All coordinates are relative to the center of the image
-    """
-    x: int
-    y: int
-    width: int
-    height: int
-
-
-@dataclass
-class Detection:
-    category: str
-    score: float
-    bounding_box: BoundingBox
 
 
 def get_detections(rgb_image: npt.NDArray[np.uint8], detector: vision.ObjectDetector) -> \
