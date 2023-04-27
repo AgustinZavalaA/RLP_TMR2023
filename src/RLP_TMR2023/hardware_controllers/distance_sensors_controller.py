@@ -75,6 +75,7 @@ class DistanceSensorsControllerRaspberry(DistanceSensorsController):
     def setup(self) -> None:
         self._addr = ultrasonic_values.I2C_ADDR
         self._i2c_bus = smbus.SMBus(ultrasonic_values.I2C_BUS)
+        self.last_data = 0
 
     def is_about_to_collide(self, strategy: Callable[[tuple[int, int, int], int], bool]) -> bool:
         if self._i2c_bus is None:
@@ -82,7 +83,11 @@ class DistanceSensorsControllerRaspberry(DistanceSensorsController):
         # read the first 3 bytes that are not 255
         sensor_data_list: list[int] = []
         while len(sensor_data_list) < 3:
-            data = self._i2c_bus.read_byte_data(self._addr, 0)
+            try:
+                data = self._i2c_bus.read_byte_data(self._addr, 0)
+                self.last_data = data
+            except:
+                data = self.last_data
             if data != 255:
                 sensor_data_list.append(data)
         sensor_data = (sensor_data_list[0], sensor_data_list[1], sensor_data_list[2])  # just for type hinting
@@ -115,10 +120,10 @@ def main():
     try:
         while True:
             print(distance_sensors.is_about_to_collide(any_sensor_strategy))
-            time.sleep(0.2)
+            time.sleep(.2)
     except KeyboardInterrupt:
         distance_sensors.disable()
-        logger.info("Exiting program")
+        logger.info("Program stopped by user.")
 
 
 if __name__ == '__main__':
