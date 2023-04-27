@@ -173,7 +173,6 @@ class BuzzerControllerMock(BuzzerController):
 
 class BuzzerControllerRaspberry(BuzzerController):
     def setup(self) -> None:
-        # BOARD pin value = 38
         self._buzzer_pin = 20
         if not GPIO.getmode():
             GPIO.setmode(GPIO.BCM)
