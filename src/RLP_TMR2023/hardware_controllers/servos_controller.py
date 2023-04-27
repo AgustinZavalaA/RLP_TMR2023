@@ -6,10 +6,15 @@ import time
 from abc import abstractmethod
 from typing import Type, Mapping
 
-import busio
 from adafruit_motor import servo
-from adafruit_pca9685 import PCA9685
-from board import SCL, SDA
+
+try:
+    import busio
+    from adafruit_pca9685 import PCA9685
+    from board import SCL, SDA
+except ImportError:
+    logger = logging.getLogger(__name__)
+    logger.warning("Adafruit libraries not installed. Servos will not work")
 
 from RLP_TMR2023.constants import servos_values
 from RLP_TMR2023.hardware_controllers.singleton import Singleton
@@ -146,7 +151,7 @@ class ServosControllerRaspberry(ServosController):
         if not bypass_check and self._servos_status[servo_pair] == status:
             return
         s1, s2 = self._get_servos(servo_pair)
-        angle_1 = self._servos_values[servo_pair][self._servos_status[servo_pair]]
+        angle_1 = self._servos_values[servo_pair][status]
         angle_2 = 180 - angle_1
         t1 = threading.Thread(target=self._move_servo, args=(s1, angle_1))
         t2 = threading.Thread(target=self._move_servo, args=(s2, angle_2))
