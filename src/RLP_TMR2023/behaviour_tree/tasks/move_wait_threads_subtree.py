@@ -39,10 +39,15 @@ def execute_motor_instructions(motors: MotorsControllers, motor_instructions: li
         MotorMovement.STOP: [MotorDirection.FORWARD, MotorDirection.FORWARD],
     }
     for instruction in motor_instructions:
+        if instruction.motor_movement == MotorMovement.STOP:
+            motors.stop()
+            time.sleep(instruction.time)
+            continue
         left_direction, right_direction = motors_directions[instruction.motor_movement]
         motors.move(MotorSide.LEFT, instruction.speed, left_direction)
         motors.move(MotorSide.RIGHT, instruction.speed, right_direction)
         time.sleep(instruction.time)
+    motors.stop()
 
 
 class ExecuteMotorInstructionsClass:

@@ -5,7 +5,6 @@ import time
 from abc import abstractmethod
 from typing import Type, Mapping
 
-from RLP_TMR2023.constants import hardware_pins
 from RLP_TMR2023.hardware_controllers.singleton import Singleton
 
 logger = logging.getLogger(__name__)
@@ -71,17 +70,17 @@ class MotorsControllerRaspberry(MotorsControllers):
         super().__init__()
         # TODO: change these hardcoded values to a config file
         # Motor 1
-        self._pin_pwm_motor_1_output: int = hardware_pins.PWM_PIN_MOTOR_1
-        self._pin_dir_motor_1_input = (13, 15)
+        self._pin_pwm_motor_1_output: int = 18  # 12
+        self._pin_dir_motor_1_input = (27, 22)
         self.pwm_motor_1: GPIO.PWM = None
         # Motor 2
-        self.pin_pwm_motor_2_input = 35
-        self.pin_dir_motor_2_input = (16, 18)
+        self.pin_pwm_motor_2_input = 19
+        self.pin_dir_motor_2_input = (23, 24)
         self.pwm_motor_2: GPIO.PWM = None
 
     def setup(self) -> None:
         if not GPIO.getmode():
-            GPIO.setmode(GPIO.BOARD)
+            GPIO.setmode(GPIO.BCM)
 
         # Set all the motor direction pins as output
         for pin in self._pin_dir_motor_1_input + self.pin_dir_motor_2_input:
