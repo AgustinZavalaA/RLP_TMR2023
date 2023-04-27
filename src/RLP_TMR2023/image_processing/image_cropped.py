@@ -3,7 +3,6 @@ import numpy as np
 import numpy.typing as npt
 
 from RLP_TMR2023.image_processing.blue_filter import blue_filter
-from RLP_TMR2023.constants.color_filters import BLUE_LOWER_HSV, BLUE_UPPER_HSV
 
 
 def trimmer_image(image: npt.NDArray[np.uint8], percentage_trimmed: int) -> npt.NDArray[np.uint8]:
@@ -26,7 +25,7 @@ def check_water(image: npt.NDArray[np.uint8]) -> npt.NDArray[np.uint8]:
     # count the number of white pixels
     ratio_water = cv2.countNonZero(new_image) / (image.size / 3)
     color_percent = (ratio_water * 100) / .3
-    return color_percent
+    return color_percent  # type: ignore
 
 
 def main():
