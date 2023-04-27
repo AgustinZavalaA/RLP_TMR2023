@@ -15,20 +15,20 @@ from RLP_TMR2023.hardware_controllers.singleton import Singleton
 logger = logging.getLogger(__name__)
 
 
-def all_sensors_strategy(sensor_values: tuple[int, int, int], max_distance: int) -> bool:
+def all_sensors_strategy(sensor_values: tuple[int, int, int], min_distance: int, max_distance: int) -> bool:
     """
     This function is used to determine if the robot is about to collide with an obstacle.
     It returns True if the robot is about to collide with an obstacle, False otherwise.
     """
-    return all(sensor_value < max_distance for sensor_value in sensor_values)
+    return all(min_distance < sensor_value < max_distance for sensor_value in sensor_values)
 
 
-def any_sensor_strategy(sensor_values: tuple[int, int, int], max_distance: int) -> bool:
+def any_sensor_strategy(sensor_values: tuple[int, int, int], min_distance: int, max_distance: int) -> bool:
     """
     This function is used to determine if the robot is about to collide with an obstacle.
     It returns True if the robot is about to collide with an obstacle, False otherwise.
     """
-    return any(sensor_value < max_distance for sensor_value in sensor_values)
+    return any(min_distance < sensor_value < max_distance for sensor_value in sensor_values)
 
 
 class DistanceSensorsController(metaclass=Singleton):
@@ -73,6 +73,7 @@ class DistanceSensorsControllerRaspberry(DistanceSensorsController):
         self._i2c_bus = None
         self._addr = None
         self._max_distance = ultrasonic_values.MAX_DISTANCE
+        self._min_distance = ultrasonic_values.MIN_DISTANCE
         self.last_data = 0
 
     def setup(self) -> None:
