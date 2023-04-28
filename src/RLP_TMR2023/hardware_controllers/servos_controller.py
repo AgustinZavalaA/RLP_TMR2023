@@ -193,15 +193,6 @@ def main():
     servos = servos_controller_factory(platform.machine())
     servos.setup()
 
-    for _ in range(2):
-        servos.toggle(ServoPair.ARM)
-        time.sleep(0.5)
-        servos.toggle(ServoPair.CLAW)
-        time.sleep(0.5)
-        servos.toggle(ServoPair.TRAY)
-        time.sleep(0.5)
-        logger.info("")
-
     servos.disable()
 
 
