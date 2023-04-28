@@ -29,7 +29,10 @@ class CameraDetectionToBB(py_trees.behaviour.Behaviour):
                 y=-100,
                 width=200,
                 height=200
-            )
+            ),
+            frame_height=1,
+            frame_width=1,
+            approx_size=1
         )
         logging.info("Detection to BB")
         return py_trees.common.Status.SUCCESS

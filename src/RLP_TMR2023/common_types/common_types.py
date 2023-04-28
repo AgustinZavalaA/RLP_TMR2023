@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass
@@ -20,7 +19,7 @@ class Detection:
     bounding_box: BoundingBox
     frame_width: int
     frame_height: int
-    approx_size: Optional[int]
+    approx_size: int
 
 
 @dataclass
