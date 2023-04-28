@@ -5,7 +5,7 @@ import numpy as np
 import numpy.typing as npt
 
 from RLP_TMR2023.common_types.common_types import BoundingBox, Detection
-from image_filtering import otsu_filtering
+from RLP_TMR2023.image_processing.image_filtering import otsu_filtering
 
 
 def draw_br_and_centroid(filtered_image: npt.NDArray[np.uint8], out) -> list[tuple[Detection, tuple[int, int]]]:
@@ -24,8 +24,9 @@ def draw_br_and_centroid(filtered_image: npt.NDArray[np.uint8], out) -> list[tup
         cy = int(m["m01"] / m["m00"])
 
         cv2.circle(out, (cx, cy), 5, (255, 0, 255), -1)
-
-        detections.append((Detection(category="Can", score=1, bounding_box=rect), (cx, cy)))
+        # TODO: remove Detection return
+        detections.append((Detection(category="Can", score=1, bounding_box=rect, frame_height=1, frame_width=1,
+                                     approx_size=1), (cx, cy)))
     return detections
 
 
@@ -33,7 +34,6 @@ def calculate_bounding_rect_and_centroid(filtered_image: npt.NDArray[np.uint8]) 
         list[tuple[Detection, tuple[int, int]]]:
     contours, hierarchy = cv2.findContours(filtered_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     detections = []
-    center_width, center_height = filtered_image.shape[1] // 2, filtered_image.shape[0] // 2
 
     for cnt in contours:
         # rect = cv2.minAreaRect(cnt)
@@ -45,8 +45,10 @@ def calculate_bounding_rect_and_centroid(filtered_image: npt.NDArray[np.uint8]) 
         cx = int(moments["m10"] / moments["m00"])
         cy = int(moments["m01"] / moments["m00"])
 
+        # TODO: remove unused detection
         detection = Detection(category="Can", score=1,
-                              bounding_box=BoundingBox(x=cx - center_width, y=cy - center_height, width=w, height=h))
+                              bounding_box=BoundingBox(x=cx, y=cy, width=w, height=h),
+                              frame_width=1, frame_height=1, approx_size=1)
         detections.append((detection, (cx, cy)))
 
     return detections

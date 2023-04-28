@@ -8,6 +8,7 @@ from RLP_TMR2023.behaviour_tree.data_recollection.distance_sensors import Distan
 from RLP_TMR2023.behaviour_tree.data_recollection.imu_stuck import IMUToBB
 from RLP_TMR2023.behaviour_tree.tasks.TODO_behaviour import TODOBehaviour
 from RLP_TMR2023.behaviour_tree.tasks.crash_subtree import create_crash_subtree
+from RLP_TMR2023.behaviour_tree.tasks.search_can_subtree import create_look_for_can_subtree
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +37,7 @@ def get_tasks_subtree() -> py_trees.behaviour.Behaviour:
         TODOBehaviour("About to enter the water"),
         TODOBehaviour("Is stuck in the sand"),
         TODOBehaviour("Has enough cans in tray or been more than x minutes"),
-        TODOBehaviour("Looking for can"),
+        create_look_for_can_subtree(),
         TODOBehaviour("Robot Lost"),
     ])
 

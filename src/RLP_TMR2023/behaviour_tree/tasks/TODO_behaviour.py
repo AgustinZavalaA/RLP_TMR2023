@@ -13,6 +13,6 @@ class TODOBehaviour(py_trees.behaviour.Behaviour):
 
     def update(self) -> py_trees.common.Status:
         logger.critical(f"'{self.name}' subtree is not implemented")
-        if self._bypass:
+        if not self._bypass:
             return py_trees.common.Status.SUCCESS
         return py_trees.common.Status.FAILURE
