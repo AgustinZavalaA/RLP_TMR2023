@@ -103,7 +103,7 @@ class GetCloseToCan(py_trees.behaviour.Behaviour):
             self.motors.stop()
             return py_trees.common.Status.SUCCESS
 
-        if y_offset < 0:
+        if y_offset > 0:
             self.motors.move(MotorSide.RIGHT, 15, MotorDirection.FORWARD)
             self.motors.move(MotorSide.LEFT, 15, MotorDirection.FORWARD)
         else:
