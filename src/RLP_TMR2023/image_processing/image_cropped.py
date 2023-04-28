@@ -13,7 +13,7 @@ def trimmer_image(image: npt.NDArray[np.uint8], percentage_trimmed: int) -> npt.
     percentage_crop = int(percentage_trimmed * 480 / 100)
     blue_image = blue_filter(image)
     cropped_image = blue_image[percentage_crop:480, 0:640]
-    return cropped_image  # type: ignore
+    return cropped_image  # type: ignore uwu
 
 
 def check_water_percentage(image: npt.NDArray[np.uint8]) -> npt.NDArray[np.uint8]:
