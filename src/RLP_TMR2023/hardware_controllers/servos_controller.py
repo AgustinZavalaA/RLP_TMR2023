@@ -2,7 +2,6 @@ import enum
 import logging
 import platform
 import threading
-import time
 from abc import abstractmethod
 from typing import Type, Mapping
 
