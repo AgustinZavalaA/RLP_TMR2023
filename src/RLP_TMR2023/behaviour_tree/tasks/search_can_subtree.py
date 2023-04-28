@@ -114,6 +114,7 @@ class GetCloseToCan(py_trees.behaviour.Behaviour):
 
 class PickCan(py_trees.behaviour.Behaviour):
     def __init__(self) -> None:
+        super().__init__("Picking can")
         self.servos = servos_controller_factory(platform.machine())
         self.motors = motors_controller_factory(platform.machine())
 
