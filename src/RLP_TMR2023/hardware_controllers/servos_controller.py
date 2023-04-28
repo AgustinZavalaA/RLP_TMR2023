@@ -198,8 +198,8 @@ def main():
         time.sleep(0.5)
         servos.toggle(ServoPair.CLAW)
         time.sleep(0.5)
-        #servos.toggle(ServoPair.TRAY)
-        #time.sleep(0.5)
+        # servos.toggle(ServoPair.TRAY)
+        # time.sleep(0.5)
         logger.info("")
 
     servos.disable()
