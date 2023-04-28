@@ -74,11 +74,11 @@ class CenterCan(py_trees.behaviour.Behaviour):
             return py_trees.common.Status.SUCCESS
 
         if x_offset > 0:
-            self.motors.move(MotorSide.RIGHT, 15, MotorDirection.FORWARD)
-            self.motors.move(MotorSide.LEFT, 15, MotorDirection.BACKWARD)
+            self.motors.move(MotorSide.RIGHT, 30, MotorDirection.FORWARD)
+            self.motors.move(MotorSide.LEFT, 30, MotorDirection.BACKWARD)
         else:
-            self.motors.move(MotorSide.RIGHT, 15, MotorDirection.BACKWARD)
-            self.motors.move(MotorSide.LEFT, 15, MotorDirection.FORWARD)
+            self.motors.move(MotorSide.RIGHT, 30, MotorDirection.BACKWARD)
+            self.motors.move(MotorSide.LEFT, 30, MotorDirection.FORWARD)
         return py_trees.common.Status.FAILURE
 
 
@@ -104,11 +104,11 @@ class GetCloseToCan(py_trees.behaviour.Behaviour):
             return py_trees.common.Status.SUCCESS
 
         if y_offset > 0:
-            self.motors.move(MotorSide.RIGHT, 15, MotorDirection.FORWARD)
-            self.motors.move(MotorSide.LEFT, 15, MotorDirection.FORWARD)
+            self.motors.move(MotorSide.RIGHT, 30, MotorDirection.FORWARD)
+            self.motors.move(MotorSide.LEFT, 30, MotorDirection.FORWARD)
         else:
-            self.motors.move(MotorSide.RIGHT, 15, MotorDirection.BACKWARD)
-            self.motors.move(MotorSide.LEFT, 15, MotorDirection.BACKWARD)
+            self.motors.move(MotorSide.RIGHT, 30, MotorDirection.BACKWARD)
+            self.motors.move(MotorSide.LEFT, 30, MotorDirection.BACKWARD)
         return py_trees.common.Status.FAILURE
 
 
