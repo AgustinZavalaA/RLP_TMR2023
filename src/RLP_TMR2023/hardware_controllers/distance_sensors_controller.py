@@ -37,7 +37,7 @@ class DistanceSensorsController(metaclass=Singleton):
         pass
 
     @abstractmethod
-    def is_about_to_collide(self, strategy: Callable[[tuple[int, int, int], int], bool]) -> bool:
+    def is_about_to_collide(self, strategy: Callable[[tuple[int, int, int], int, int], bool]) -> bool:
         pass
 
     @abstractmethod
@@ -58,7 +58,7 @@ class DistanceSensorsControllerMock(DistanceSensorsController):
     def setup(self) -> None:
         logger.info("DistanceSensorsControllerMock.setup() called")
 
-    def is_about_to_collide(self, strategy: Callable[[tuple[int, int, int], int], bool]) -> bool:
+    def is_about_to_collide(self, strategy: Callable[[tuple[int, int, int], int, int], bool]) -> bool:
         logger.info("Sensing distance")
         self._mock_index += 1
         return self._mock_index % 50 == 0
@@ -80,7 +80,7 @@ class DistanceSensorsControllerRaspberry(DistanceSensorsController):
         self._addr = ultrasonic_values.I2C_ADDR
         self._i2c_bus = smbus.SMBus(ultrasonic_values.I2C_BUS)
 
-    def is_about_to_collide(self, strategy: Callable[[tuple[int, int, int], int], bool]) -> bool:
+    def is_about_to_collide(self, strategy: Callable[[tuple[int, int, int], int, int], bool]) -> bool:
         if self._i2c_bus is None:
             raise RuntimeError("The distance sensors controller has not been setup yet")
         # read the first 3 bytes that are not 255
