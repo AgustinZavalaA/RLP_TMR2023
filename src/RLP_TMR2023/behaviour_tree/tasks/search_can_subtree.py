@@ -9,8 +9,8 @@ logger = logging.getLogger(__name__)
 class TFDetection(py_trees.behaviour.Behaviour):
     def __init__(self) -> None:
         self.blackboard = self.attach_blackboard_client()
-        self.blackboard.register_key("detection")
-        self.blackboard.register_key("centroid")
+        self.blackboard.register_key("detection", access=py_trees.common.Access.WRITE)
+        self.blackboard.register_key("centroid", access=py_trees.common.Access.WRITE)
 
     def update(self) -> common.Status:
         pass
