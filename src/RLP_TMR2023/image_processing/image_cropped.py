@@ -16,7 +16,7 @@ def trimmer_image(image: npt.NDArray[np.uint8], percentage_trimmed: int) -> npt.
     return cropped_image  # type: ignore
 
 
-def check_water(image: npt.NDArray[np.uint8]) -> npt.NDArray[np.uint8]:
+def check_water_percentage(image: npt.NDArray[np.uint8]) -> npt.NDArray[np.uint8]:
     """
     Check if the water is present in the image
 
@@ -28,6 +28,13 @@ def check_water(image: npt.NDArray[np.uint8]) -> npt.NDArray[np.uint8]:
     return color_percent  # type: ignore
 
 
+def check_is_water(image_color_percentage: npt.NDArray[np.uint8]) -> bool:
+    if image_color_percentage > 50:
+        return True
+    else:
+        return False
+
+
 def main():
     camera = cv2.VideoCapture(0)
     while True:
@@ -36,7 +43,7 @@ def main():
 
         cut_image = trimmer_image(img, 80)
 
-        water_image = check_water(img)
+        water_image = check_water_percentage(img)
 
         cv2.imshow("Original", img)
         cv2.imshow("Cut and filtered blue", cut_image)
