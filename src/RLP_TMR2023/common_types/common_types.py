@@ -1,16 +1,16 @@
 from dataclasses import dataclass
+from typing import Optional
 
 
 @dataclass
 class BoundingBox:
     """
     Bounding box of an object detected by the model
-    All coordinates are relative to the center of the image
     """
-    x: float
-    y: float
-    width: float
-    height: float
+    x: int
+    y: int
+    width: int
+    height: int
 
 
 @dataclass
@@ -18,3 +18,12 @@ class Detection:
     category: str
     score: float
     bounding_box: BoundingBox
+    frame_width: int
+    frame_height: int
+    approx_size: Optional[int]
+
+
+@dataclass
+class Centroid:
+    x: int
+    y: int
