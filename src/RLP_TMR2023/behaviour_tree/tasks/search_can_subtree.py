@@ -27,6 +27,8 @@ def create_look_for_can_subtree() -> py_trees.behaviour.Behaviour:
     find_can.add_children([
         py_trees.decorators.EternalGuard(
             "Is TF detection None?",
+            TFDetection(),
+            condition=lambda blackboard: blackboard.detection is None
 
         )
     ])
