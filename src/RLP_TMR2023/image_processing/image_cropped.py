@@ -19,7 +19,6 @@ def trimmer_image(image: npt.NDArray[np.uint8], percentage_trimmed: int) -> npt.
 def check_water_percentage(image: npt.NDArray[np.uint8]) -> float:
     """
     Check if the water is present in the image
-
     """
     new_image = trimmer_image(image, 80)
     # count the number of white pixels
@@ -28,9 +27,9 @@ def check_water_percentage(image: npt.NDArray[np.uint8]) -> float:
     return float(color_percent)  # type: ignore
 
 
-def check_is_water(image_color_percentage: float) -> bool:
+def check_is_water(image_percentage: float) -> bool:
 
-    if image_color_percentage > 50:
+    if image_percentage > 50:
         return True
     else:
         return False
